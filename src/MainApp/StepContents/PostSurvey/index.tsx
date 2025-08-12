@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import SurveyContent from '../../../shared/SurveyContent';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { completeStep, selectIsStepCompleted } from '../../../reducer';
-import type { RootState } from '../../../store';
+import { useDispatch } from 'react-redux';
+import { completeStep } from '../../../reducer';
 import { Box } from '@mantine/core';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 
@@ -38,7 +37,7 @@ export interface SurveyResponse {
 export default function PostSurvey() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/post-survey')(state));
+  // const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/post-survey')(state));
   const { user } = useAuthenticator((context) => [context.user]);
 
   const [responses, setResponses] = useState<SurveyResponse>({

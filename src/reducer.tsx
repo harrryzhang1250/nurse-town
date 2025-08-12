@@ -183,7 +183,7 @@ export const {
 } = stepSlice.actions;
 
 // Base selectors
-const selectStepState = (state: { steps: StepState }) => state.steps;
+// const selectStepState = (state: { steps: StepState }) => state.steps;
 const selectCurrentUserId = (state: { steps: StepState }) => state.steps.currentUserId;
 const selectUserStates = (state: { steps: StepState }) => state.steps.userStates;
 

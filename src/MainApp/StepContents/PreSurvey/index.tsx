@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import SurveyContent from '../../../shared/SurveyContent';
-import * as client from './client';
+// import * as client from './client';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { completeStep, selectIsStepCompleted } from '../../../reducer';
-import type { RootState } from '../../../store';
+import { useDispatch } from 'react-redux';
+import { completeStep } from '../../../reducer';
 import { Box } from '@mantine/core';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 
@@ -22,7 +21,7 @@ export interface SurveyResponse {
 export default function PreSurvey() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/pre-survey')(state));
+  // const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/pre-survey')(state));
   const { user } = useAuthenticator((context) => [context.user]);
 
   const [responses, setResponses] = useState<SurveyResponse>({

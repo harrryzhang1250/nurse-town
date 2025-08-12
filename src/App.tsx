@@ -9,7 +9,7 @@ import PreSurvey from './MainApp/StepContents/PreSurvey';
 import SignUpStudy from './MainApp/StepContents/SignUpStudy';
 import PostSurvey from './MainApp/StepContents/PostSurvey';
 import SignUpInterview from './MainApp/StepContents/SignUpInterview';
-import { selectAllSteps, selectCompletedStepPaths, setCurrentStep, setCurrentUser, autoCompletePreviousSteps } from './reducer';
+import { selectAllSteps, selectCompletedStepPaths, setCurrentStep, setCurrentUser } from './reducer';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import type { RootState } from './store';
 

@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { completeStep, selectIsStepCompleted } from '../../../reducer';
 import type { RootState } from '../../../store';
@@ -6,7 +5,6 @@ import SignUpInterviewContent from './Content';
 
 export default function SignUpInterview() {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/sign-up-interview')(state));
 
   const handleComplete = () => {
