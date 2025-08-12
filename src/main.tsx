@@ -2,12 +2,15 @@ import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css'
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'react-redux';
 import { Authenticator } from '@aws-amplify/ui-react';
 import App from "./App.tsx";
 import "./index.css";
 import { Amplify } from "aws-amplify";
 import outputs from "../amplify_outputs.json";
 import '@aws-amplify/ui-react/styles.css';
+import store from './store';
 
 Amplify.configure(outputs);
 
@@ -37,10 +40,14 @@ const components = {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Authenticator components={components}>
-      <MantineProvider>
-        <App />
-      </MantineProvider>
+    <Provider store={store}>
+      <BrowserRouter>
+        <Authenticator components={components}>
+          <MantineProvider>
+      <App />
+          </MantineProvider>
     </Authenticator>
+      </BrowserRouter>
+    </Provider>
   </React.StrictMode>
 );

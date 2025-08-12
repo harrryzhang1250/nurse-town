@@ -173,22 +173,7 @@ const ResponsePage: React.FC<ResponsePageProps> = ({
                 >
                   {isSuccess ? 'Register Another User' : 'Try Again'}
                 </Button>
-
-                {isSuccess && (
-                  <Button
-                    size="lg"
-                    variant="subtle"
-                    style={{
-                      color: '#666',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: 500
-                    }}
-                    onClick={() => window.location.href = '/admin'}
-                  >
-                    Return to Admin Panel
-                  </Button>
-                )}
+                
               </Stack>
             </Stack>
           </Center>

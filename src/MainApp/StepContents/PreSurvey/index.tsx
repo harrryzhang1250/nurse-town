@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
-import SurveyContent from './SurveyContent';
-import SubmitSuccess from './SubmitSuccess';
+import SurveyContent from '../../../shared/SurveyContent';
 import * as client from './client';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { completeStep, selectIsStepCompleted } from '../../../reducer';
+import type { RootState } from '../../../store';
+import { Box } from '@mantine/core';
+import { useAuthenticator } from '@aws-amplify/ui-react';
 
 export interface SurveyResponse {
+  [key: string]: number | null | string;
   expressiveAphasia: number | null;
   modifyLanguage: number | null;
   hospitalDischarge: number | null;
@@ -14,6 +20,11 @@ export interface SurveyResponse {
 }
 
 export default function PreSurvey() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/pre-survey')(state));
+  const { user } = useAuthenticator((context) => [context.user]);
+
   const [responses, setResponses] = useState<SurveyResponse>({
     expressiveAphasia: null,
     modifyLanguage: null,
@@ -24,24 +35,17 @@ export default function PreSurvey() {
     openEnded: ''
   });
 
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [urlParams, setUrlParams] = useState<URLSearchParams | null>(null);
-
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const getSurvey = async () => {
-      const response = await client.getSurvey(searchParams.get('userID') || '');
-      if (response){
-        setIsSubmitted(true);
-      }
-    }
-    getSurvey();
-    setUrlParams(searchParams);
+    // const getSurvey = async () => {
+    //   const response = await client.getSurvey(searchParams.get('userID') || '');
+    //   if (response){
+    //     setIsSubmitted(true);
+    //   }
+    // }
+    // getSurvey();
+    // setUrlParams(searchParams);
   }, []);
 
-  const getUrlParam = (paramName: string): string | null => {
-    return urlParams?.get(paramName) || null;
-  };
 
   const handleRatingChange = (field: keyof SurveyResponse, value: number) => {
     setResponses(prev => ({
@@ -50,28 +54,24 @@ export default function PreSurvey() {
     }));
   };
 
-  const handleTextChange = (value: string) => {
+  const handleTextChange = (field: keyof SurveyResponse, value: string) => {
     setResponses(prev => ({
       ...prev,
-      openEnded: value
+      [field]: value
     }));
   };
 
   const handleSubmit = async () => {
-    try {
-      const submissionData = {
-        answers: responses,
-        userID: getUrlParam('userID'),
-      };
+    const submissionData = {
+      answers: responses,
+      userID: user?.username,
+    };
+    
+    // await client.submitSurvey(submissionData);
+    console.log(submissionData);
+    dispatch(completeStep('/pre-survey'));
+    navigate('/sign-up-study');
 
-      console.log(submissionData);
-      
-      const response = await client.submitSurvey(submissionData);
-      console.log('Survey submitted successfully:', response);
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error('Error submitting survey:', error);
-    }
   };
 
   const questions = [
@@ -111,16 +111,37 @@ export default function PreSurvey() {
 
   const formValid = isFormValid();
 
-  return isSubmitted ? (
-    <SubmitSuccess />
-  ) : (
-    <SurveyContent
-      responses={responses}
-      questions={questions}
-      formValid={formValid}
-      onRatingChange={handleRatingChange}
-      onTextChange={handleTextChange}
-      onSubmit={handleSubmit}
-    />
+  return (
+    <Box
+      style={{
+        paddingTop: '50px', // Account for TopBar
+        minHeight: '100vh',
+        background: 'white',
+        boxSizing: 'border-box',
+        overflow: 'auto',
+        position: 'relative'
+      }}
+    >
+      <SurveyContent<SurveyResponse>
+        responses={responses}
+        questions={questions}
+        singleOpenEndedQuestion={{
+          field: 'openEnded',
+          text: 'What are you hoping to gain from this simulation experience?'
+        }}
+        formValid={formValid}
+        onRatingChange={handleRatingChange}
+        onTextChange={handleTextChange}
+        onSubmit={handleSubmit}
+        title="Pre-Simulation Survey"
+        ratingScale={{
+          min: 0,
+          max: 5,
+          leftLabel: 'Not confident at all',
+          rightLabel: 'Extremely confident'
+        }}
+      />
+    </Box>
   );
 };
+
