@@ -1,84 +1,63 @@
 import { useState, useEffect } from 'react';
 import SurveyContent from '../../../shared/SurveyContent';
+import * as client from './client';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { completeStep } from '../../../reducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { completeStep, selectIsStepCompleted, setPostSurvey, selectPostSurvey } from '../../../reducer';
+import type { RootState } from '../../../store';
 import { Box } from '@mantine/core';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { updateUserAttributes } from 'aws-amplify/auth';
 
-export interface SurveyResponse {
-  [key: string]: number | null | string;
-  expressiveAphasia: number | null;
-  modifyLanguage: number | null;
-  hospitalDischarge: number | null;
-  showEmpathy: number | null;
-  unexpectedBehavior: number | null;
-  transferableSkills: number | null;
-  layoutDesign: number | null;
-  easyNavigation: number | null;
-  authenticCommunication: number | null;
-  facialExpressions: number | null;
-  voiceResponses: number | null;
-  systemScoring: number | null;
-  feedbackHelpful: number | null;
-  useIndependently: number | null;
-  standardizedPatients: number | null;
-  comfortablePracticing: number | null;
-  pauseReflect: number | null;
-  recognizeGrowth: number | null;
-  recommendPlatform: number | null;
-  openEnded1: string;
-  openEnded2: string;
-  openEnded3: string;
-  openEnded4: string;
-  openEnded5: string;
-}
+
+// Use a flexible type that can handle any survey structure
+export type SurveyResponse = Record<string, number | null | string>;
 
 export default function PostSurvey() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/post-survey')(state));
+  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/post-survey')(state));
+  const postSurveyFromRedux = useSelector((state: RootState) => selectPostSurvey(state));
   const { user } = useAuthenticator((context) => [context.user]);
 
-  const [responses, setResponses] = useState<SurveyResponse>({
-    expressiveAphasia: null,
-    modifyLanguage: null,
-    hospitalDischarge: null,
-    showEmpathy: null,
-    unexpectedBehavior: null,
-    transferableSkills: null,
-    layoutDesign: null,
-    easyNavigation: null,
-    authenticCommunication: null,
-    facialExpressions: null,
-    voiceResponses: null,
-    systemScoring: null,
-    feedbackHelpful: null,
-    useIndependently: null,
-    standardizedPatients: null,
-    comfortablePracticing: null,
-    pauseReflect: null,
-    recognizeGrowth: null,
-    recommendPlatform: null,
-    openEnded1: '',
-    openEnded2: '',
-    openEnded3: '',
-    openEnded4: '',
-    openEnded5: ''
-  });
+  const [responses, setResponses] = useState<SurveyResponse>({});
 
+  const getSurvey = async () => {
+    if (!user?.username) return;
+    
+    try {
+      const survey = await client.getSurvey(user.username) as any;
+      if (survey?.answers) {
+        // Backend now handles number conversion, so we can use the data directly
+        const surveyData = survey.answers as SurveyResponse;
+        setResponses(surveyData);
+        // Save to Redux store
+        dispatch(setPostSurvey(surveyData));
+      }
+    } catch (error) {
+      // 忽略获取错误
+    }
+  }
+
+  // Load data from Redux if available, otherwise fetch from server
   useEffect(() => {
-    // Placeholder for any post-survey initialization if needed
-  }, []);
+    if (postSurveyFromRedux) {
+      // Use data from Redux store
+      setResponses(postSurveyFromRedux);
+    } else {
+      // Fetch from server and save to Redux
+      getSurvey();
+    }
+  }, [user?.username, isCompleted, postSurveyFromRedux]);
 
-  const handleRatingChange = (field: keyof SurveyResponse, value: number) => {
+  const handleRatingChange = (field: string, value: number) => {
     setResponses(prev => ({
       ...prev,
       [field]: value
     }));
   };
 
-  const handleTextChange = (field: keyof SurveyResponse, value: string) => {
+  const handleTextChange = (field: string, value: string) => {
     setResponses(prev => ({
       ...prev,
       [field]: value
@@ -86,129 +65,138 @@ export default function PostSurvey() {
   };
 
   const handleSubmit = async () => {
-    const submissionData = {
-      answers: responses,
-      userID: user?.username,
-    };
+    if (!user?.username) {
+      console.error('User not authenticated');
+      return;
+    }
 
-    console.log(submissionData);
-    dispatch(completeStep('/post-survey'));
-    navigate('/sign-up-interview');
+    try {
+      const submissionData = {
+        userID: user.username,
+        answers: responses,
+      };
+      
+      await client.submitSurvey(submissionData);
+      
+      // Update the current completed step in Cognito
+      await updateUserAttributes({
+        userAttributes: {
+          'custom:currentCompletedStep': 'post-survey'
+        }
+      });
+      
+      // Save to Redux store after successful submission
+      dispatch(setPostSurvey(responses));
+      dispatch(completeStep('/post-survey'));
+      navigate('/completion');
+    } catch (error) {
+      console.error('Error submitting survey:', error);
+    }
   };
 
   const questions = [
     {
-      field: 'expressiveAphasia' as keyof SurveyResponse,
+      field: 'I feel more confident interviewing a client with expressive aphasia' as keyof SurveyResponse,
       text: 'I feel more confident interviewing a client with expressive aphasia'
     },
     {
-      field: 'modifyLanguage' as keyof SurveyResponse,
+      field: 'I feel better prepared to modify my language for clients with communication challenges' as keyof SurveyResponse,
       text: 'I feel better prepared to modify my language for clients with communication challenges'
     },
     {
-      field: 'hospitalDischarge' as keyof SurveyResponse,
+      field: 'I can interpret and apply hospital discharge documentation more effectively' as keyof SurveyResponse,
       text: 'I can interpret and apply hospital discharge documentation more effectively'
     },
     {
-      field: 'showEmpathy' as keyof SurveyResponse,
+      field: 'I know how to show empathy while gathering clinical information' as keyof SurveyResponse,
       text: 'I know how to show empathy while gathering clinical information'
     },
     {
-      field: 'unexpectedBehavior' as keyof SurveyResponse,
+      field: 'I feel more confident responding to unexpected client behavior during sessions' as keyof SurveyResponse,
       text: 'I feel more confident responding to unexpected client behavior during sessions'
     },
     {
-      field: 'transferableSkills' as keyof SurveyResponse,
+      field: 'This simulation helped me build transferable clinical skills' as keyof SurveyResponse,
       text: 'This simulation helped me build transferable clinical skills'
     },
     {
-      field: 'layoutDesign' as keyof SurveyResponse,
+      field: 'The simulation layout and environment felt well-designed' as keyof SurveyResponse,
       text: 'The simulation layout and environment felt well-designed'
     },
     {
-      field: 'easyNavigation' as keyof SurveyResponse,
+      field: 'The interface was easy to navigate' as keyof SurveyResponse,
       text: 'The interface was easy to navigate'
     },
     {
-      field: 'authenticCommunication' as keyof SurveyResponse,
+      field: "The patient's communication felt authentic for Broca's aphasia" as keyof SurveyResponse,
       text: "The patient's communication felt authentic for Broca's aphasia"
     },
     {
-      field: 'facialExpressions' as keyof SurveyResponse,
+      field: "Facial expressions and gestures matched the patient's condition" as keyof SurveyResponse,
       text: "Facial expressions and gestures matched the patient's condition"
     },
     {
-      field: 'voiceResponses' as keyof SurveyResponse,
+      field: "The patient's voice and responses felt natural and appropriate" as keyof SurveyResponse,
       text: "The patient's voice and responses felt natural and appropriate"
     },
     {
-      field: 'systemScoring' as keyof SurveyResponse,
+      field: 'The system scoring I received accurately reflected my clinical performance' as keyof SurveyResponse,
       text: 'The system scoring I received accurately reflected my clinical performance'
     },
     {
-      field: 'feedbackHelpful' as keyof SurveyResponse,
+      field: 'The feedback helped me identify specific areas for improvement' as keyof SurveyResponse,
       text: 'The feedback helped me identify specific areas for improvement'
     },
     {
-      field: 'useIndependently' as keyof SurveyResponse,
+      field: 'I would use this platform to practice independently if it were available' as keyof SurveyResponse,
       text: 'I would use this platform to practice independently if it were available'
     },
     {
-      field: 'standardizedPatients' as keyof SurveyResponse,
+      field: 'The platform gives me more chances to interact with standardized patients, which is helpful' as keyof SurveyResponse,
       text: 'The platform gives me more chances to interact with standardized patients, which is helpful'
     },
     {
-      field: 'comfortablePracticing' as keyof SurveyResponse,
+      field: 'With this platform, I felt more comfortable practicing without being observed by other people' as keyof SurveyResponse,
       text: 'With this platform, I felt more comfortable practicing without being observed by other people'
     },
     {
-      field: 'pauseReflect' as keyof SurveyResponse,
+      field: 'The simulation allowed me to pause, reflect, and retry without judgment' as keyof SurveyResponse,
       text: 'The simulation allowed me to pause, reflect, and retry without judgment'
     },
     {
-      field: 'recognizeGrowth' as keyof SurveyResponse,
+      field: 'This platform helped me recognize growth areas I might miss in real-time' as keyof SurveyResponse,
       text: 'This platform helped me recognize growth areas I might miss in real-time'
     },
     {
-      field: 'recommendPlatform' as keyof SurveyResponse,
+      field: 'I would recommend this simulation platform to other students' as keyof SurveyResponse,
       text: 'I would recommend this simulation platform to other students'
     }
   ];
 
   const openEndedQuestions = [
     {
-      field: 'openEnded1' as keyof SurveyResponse,
+      field: 'What aspects of the simulation felt most helpful?' as keyof SurveyResponse,
       text: 'What aspects of the simulation felt most helpful?'
     },
     {
-      field: 'openEnded2' as keyof SurveyResponse,
+      field: 'What new knowledge or skill did you gain?' as keyof SurveyResponse,
       text: 'What new knowledge or skill did you gain?'
     },
     {
-      field: 'openEnded3' as keyof SurveyResponse,
+      field: 'What aspects could be improved?' as keyof SurveyResponse,
       text: 'What aspects could be improved?'
     },
     {
-      field: 'openEnded4' as keyof SurveyResponse,
+      field: 'Were there any moments where the simulation didn\'t respond as expected? Please explain.' as keyof SurveyResponse,
       text: 'Were there any moments where the simulation didn\'t respond as expected? Please explain.'
     },
     {
-      field: 'openEnded5' as keyof SurveyResponse,
+      field: 'What features would make this platform better for future learners?' as keyof SurveyResponse,
       text: 'What features would make this platform better for future learners?'
     }
   ];
 
-  const isFormValid = () => {
-    const allRatingsAnswered = questions.every(question => 
-      responses[question.field] !== null && responses[question.field] !== 0
-    );
-    const allOpenEndedAnswered = openEndedQuestions.every(question =>
-      (responses[question.field] as string).trim() !== ''
-    );
-    return allRatingsAnswered && allOpenEndedAnswered;
-  };
 
-  const formValid = isFormValid();
 
   return (
     <Box
@@ -225,7 +213,7 @@ export default function PostSurvey() {
         responses={responses}
         questions={questions}
         openEndedQuestions={openEndedQuestions}
-        formValid={formValid}
+        isCompleted={isCompleted}
         onRatingChange={handleRatingChange}
         onTextChange={handleTextChange}
         onSubmit={handleSubmit}

@@ -8,4 +8,13 @@ export const auth = defineAuth({
   loginWith: {
     email: true,
   },
+
+  userAttributes: {
+    "custom:currentCompletedStep": {
+      dataType: "String",
+      mutable: true,
+      maxLen: 50,
+      minLen: 1,
+    },
+  }
 });

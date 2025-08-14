@@ -37,15 +37,21 @@ function Sidebar({ steps, completedSteps }: SidebarProps) {
           const isCompleted = completedSteps.includes(step.path);
           const isClickable =
             index === 0 || completedSteps.includes(steps[index - 1].path) || isCompleted;
-          const isActive = location.pathname === step.path;
+          const isSelected = location.pathname === step.path; // Current page location
+          
+          // Find the next step to complete (first incomplete step)
+          const nextStepToComplete = steps.find((s) => !completedSteps.includes(s.path));
+          const isActive = nextStepToComplete ? nextStepToComplete.path === step.path : false;
 
           return (
             <StepItem
               key={index}
               step={step}
+              stepNumber={index + 1}
               isCompleted={isCompleted}
               isClickable={isClickable}
               isActive={isActive}
+              isSelected={isSelected}
               onClick={() => {
                 if (isClickable) navigate(step.path);
               }}

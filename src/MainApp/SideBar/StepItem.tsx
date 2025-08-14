@@ -6,17 +6,21 @@ interface StepItemProps {
     name: string;
     path: string;
   };
+  stepNumber: number;
   isCompleted: boolean;
   isClickable: boolean;
   isActive: boolean;
+  isSelected: boolean;
   onClick: () => void;
 }
 
 const StepItem: React.FC<StepItemProps> = ({
   step,
+  stepNumber,
   isCompleted,
   isClickable,
   isActive,
+  isSelected,
   onClick
 }) => {
   let backgroundColor = 'transparent';
@@ -26,11 +30,15 @@ const StepItem: React.FC<StepItemProps> = ({
   let cursor = 'pointer';
 
   if (isActive) {
-    backgroundColor = '#4f46e5';
+    backgroundColor = '#4f46e5'; // Blue for current step
+    color = 'white';
+    fontWeight = 600;
+  } else if (isSelected) {
+    backgroundColor = '#059669'; // Dark green for selected step
     color = 'white';
     fontWeight = 700;
   } else if (isCompleted) {
-    backgroundColor = '#10b981';
+    backgroundColor = '#10b981'; // Light green for completed steps
     color = 'white';
   } else if (!isClickable) {
     color = 'gray';
@@ -59,7 +67,7 @@ const StepItem: React.FC<StepItemProps> = ({
           fontWeight: 'inherit'
         }}
       >
-        {step.name}
+        {stepNumber === 8 ? "Completion" : `Step ${stepNumber}: ${step.name}`}
       </Text>
     </Box>
   );

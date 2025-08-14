@@ -9,7 +9,7 @@ import {
   Stack,
   Box,
   UnstyledButton,
-  Center
+  Center,
 } from '@mantine/core';
 
 // Generic survey response interface
@@ -35,7 +35,8 @@ interface SurveyContentProps<T extends BaseSurveyResponse> {
     field: keyof T;
     text: string;
   };
-  formValid: boolean;
+  formValid?: boolean;
+  isCompleted?: boolean;
   onRatingChange: (field: keyof T, value: number) => void;
   onTextChange: (field: keyof T, value: string) => void;
   onSubmit: () => void;
@@ -53,7 +54,8 @@ function SurveyContent<T extends BaseSurveyResponse>({
   questions,
   openEndedQuestions,
   singleOpenEndedQuestion,
-  formValid,
+  formValid = true,
+  isCompleted = false,
   onRatingChange,
   onTextChange,
   onSubmit,
@@ -81,10 +83,18 @@ function SurveyContent<T extends BaseSurveyResponse>({
       <Box style={{ width: '100%', margin: '20px auto' }}>
         {/* Rating scale with labels */}
         <Group justify="space-between" align="center" style={{ marginBottom: '10px' }}>
-          <Text style={{ fontSize: '14px', color: '#666', fontWeight: 500 }}>
+          <Text style={{ 
+            fontSize: '14px', 
+            color: isCompleted ? '#9ca3af' : '#666', 
+            fontWeight: 500 
+          }}>
             {ratingScale.leftLabel}
           </Text>
-          <Text style={{ fontSize: '14px', color: '#666', fontWeight: 500 }}>
+          <Text style={{ 
+            fontSize: '14px', 
+            color: isCompleted ? '#9ca3af' : '#666', 
+            fontWeight: 500 
+          }}>
             {ratingScale.rightLabel}
           </Text>
         </Group>
@@ -92,7 +102,12 @@ function SurveyContent<T extends BaseSurveyResponse>({
         {/* Number labels */}
         <Group justify="space-between" align="center" style={{ marginBottom: '5px', paddingLeft: '15px', paddingRight: '15px' }}>
           {ratingValues.map(number => (
-            <Text key={number} style={{ fontSize: '14px', color: '#999', width: '30px', textAlign: 'center' }}>
+            <Text key={number} style={{ 
+              fontSize: '14px', 
+              color: isCompleted ? '#9ca3af' : '#999', 
+              width: '30px', 
+              textAlign: 'center' 
+            }}>
               {number}
             </Text>
           ))}
@@ -108,21 +123,22 @@ function SurveyContent<T extends BaseSurveyResponse>({
             return (
               <UnstyledButton
                 key={rating}
-                onClick={() => onChange(rating)}
-                onMouseEnter={() => setHoveredRating(rating)}
-                onMouseLeave={() => setHoveredRating(null)}
+                onClick={isCompleted ? undefined : () => onChange(rating)}
+                onMouseEnter={isCompleted ? undefined : () => setHoveredRating(rating)}
+                onMouseLeave={isCompleted ? undefined : () => setHoveredRating(null)}
                 style={{
                   width: '30px',
                   height: '30px',
                   borderRadius: '50%',
-                  border: '2px solid #ddd',
-                  backgroundColor: isActive ? '#ffa500' : 'transparent',
+                  border: `2px solid ${isCompleted ? '#9ca3af' : '#ddd'}`,
+                  backgroundColor: isActive ? (isCompleted ? '#9ca3af' : '#ffa500') : 'transparent',
                   transition: 'all 0.2s ease',
-                  cursor: 'pointer',
+                  cursor: isCompleted ? 'default' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transform: hoveredRating === rating ? 'scale(1.1)' : 'scale(1)'
+                  transform: isCompleted ? 'scale(1)' : (hoveredRating === rating ? 'scale(1.1)' : 'scale(1)'),
+                  opacity: isCompleted ? 0.8 : 1
                 }}
               >
                 {isActive && (
@@ -146,15 +162,14 @@ function SurveyContent<T extends BaseSurveyResponse>({
   return (
     <div
       style={{
-        width: '100%',
         minHeight: '100%',
         background: 'white',
         padding: '20px 20px 40px 20px',
-        boxSizing: 'border-box',
+        boxSizing: 'border-box' as const,
         position: 'relative',
         height: 'calc(100vh - 100px)',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'column' as const
       }}
     >
       <Container size="md" style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
@@ -226,27 +241,29 @@ function SurveyContent<T extends BaseSurveyResponse>({
                 </Text>
                 <Textarea
                   value={responses[singleOpenEndedQuestion.field] as string}
-                  onChange={(e) => onTextChange(singleOpenEndedQuestion.field, e.target.value)}
-                  placeholder="Type here..."
+                  onChange={isCompleted ? undefined : (e) => onTextChange(singleOpenEndedQuestion.field, e.target.value)}
+                  placeholder={isCompleted ? "" : "Type here..."}
                   autosize
                   minRows={5}
                   maxRows={10}
                   size="lg"
+                  disabled={isCompleted}
                   style={{
-                    backgroundColor: '#f3f4f6',
+                    backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
                     border: 'none',
                     width: '100%'
                   }}
                   styles={{
                     input: {
-                      backgroundColor: '#f3f4f6',
+                      backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
                       border: 'none',
                       borderRadius: '10px',
                       fontSize: '16px',
-                      color: '#111',
+                      color: isCompleted ? '#9ca3af' : '#111',
                       padding: '14px',
                       width: '100%',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      cursor: isCompleted ? 'default' : 'text'
                     }
                   }}
                 />
@@ -262,7 +279,7 @@ function SurveyContent<T extends BaseSurveyResponse>({
                       fw={600}
                       mb="md"
                       c="#111"
-                      style={{ 
+                      style={{
                         fontSize: '18px',
                         textAlign: 'left',
                       }}
@@ -271,27 +288,28 @@ function SurveyContent<T extends BaseSurveyResponse>({
                     </Text>
                     <Textarea
                       value={responses[question.field] as string}
-                      onChange={(e) => onTextChange(question.field, e.target.value)}
-                      placeholder="Type here..."
+                      onChange={isCompleted ? undefined : (e) => onTextChange(question.field, e.target.value)}
+                      placeholder={isCompleted ? "" : "Type here..."}
                       autosize
                       minRows={5}
-                      maxRows={10}
                       size="lg"
+                      disabled={isCompleted}
                       style={{
-                        backgroundColor: '#f3f4f6',
+                        backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
                         border: 'none',
                         width: '100%'
                       }}
                       styles={{
                         input: {
-                          backgroundColor: '#f3f4f6',
+                          backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
                           border: 'none',
                           borderRadius: '10px',
                           fontSize: '16px',
-                          color: '#111',
+                          color: isCompleted ? '#9ca3af' : '#111',
                           padding: '14px',
                           width: '100%',
-                          boxSizing: 'border-box'
+                          boxSizing: 'border-box',
+                          cursor: isCompleted ? 'default' : 'text'
                         }
                       }}
                     />
@@ -303,11 +321,11 @@ function SurveyContent<T extends BaseSurveyResponse>({
 
           <Center>
             <Button
-              onClick={onSubmit}
+              onClick={isCompleted ? undefined : onSubmit}
               size="lg"
-              disabled={!formValid}
+              disabled={isCompleted || !formValid}
               style={{
-                backgroundColor: '#4f46e5',
+                backgroundColor: isCompleted ? '#9ca3af' : '#4f46e5',
                 border: 'none',
                 borderRadius: '12px',
                 fontSize: '18px',
@@ -315,27 +333,27 @@ function SurveyContent<T extends BaseSurveyResponse>({
                 padding: '16px 60px',
                 transition: 'all 0.3s ease',
                 minWidth: '400px',
-                color: formValid ? 'white' : '#ffffff',
-                cursor: formValid ? 'pointer' : 'not-allowed',
-                opacity: formValid ? 1 : 0.7,
+                color: 'white',
+                cursor: isCompleted ? 'default' : (formValid ? 'pointer' : 'not-allowed'),
+                opacity: isCompleted ? 0.8 : (formValid ? 1 : 0.7),
                 marginTop: '40px'
               }}
               onMouseEnter={(e) => {
-                if (formValid) {
+                if (!isCompleted && formValid) {
                   e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 16px rgba(168, 140, 118, 0.28)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (formValid) {
-                  e.currentTarget.style.backgroundColor = '#d2691e';
+                if (!isCompleted && formValid) {
+                  e.currentTarget.style.backgroundColor = '#4f46e5';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '';
                 }
               }}
             >
-              Submit Survey
+              {isCompleted ? 'Completed' : 'Submit Survey'}
             </Button>
           </Center>
         </Paper>

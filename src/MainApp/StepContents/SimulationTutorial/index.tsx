@@ -2,29 +2,29 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { completeStep, selectIsStepCompleted } from '../../../reducer';
 import type { RootState } from '../../../store';
-import InformedConsentContent from './Content';
+import SimulationTutorialContent from './Content';
 import { updateUserAttributes } from 'aws-amplify/auth';
 
-export default function InformedConsent() {
+export default function SimulationTutorial() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/informed-consent')(state));
+  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/simulation-tutorial')(state));
 
   const handleComplete = async () => {
     // Update the current completed step in Cognito
     await updateUserAttributes({
       userAttributes: {
-        'custom:currentCompletedStep': 'informed-consent'
+        'custom:currentCompletedStep': 'simulation-tutorial'
       }
     });
-    dispatch(completeStep('/informed-consent'));
-    navigate('/pre-survey');
+    dispatch(completeStep('/simulation-tutorial'));
+    navigate('/level-1-simulation');
   };
 
   return (
-    <InformedConsentContent 
+    <SimulationTutorialContent 
       isCompleted={isCompleted}
       onComplete={handleComplete}
     />
   );
-} 
+}

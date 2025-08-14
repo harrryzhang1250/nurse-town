@@ -6,12 +6,17 @@ import TopBar from './TopBar';
 import Sidebar from './MainApp/SideBar';
 import InformedConsent from './MainApp/StepContents/InformedConsent';
 import PreSurvey from './MainApp/StepContents/PreSurvey';
-import SignUpStudy from './MainApp/StepContents/SignUpStudy';
+import SimulationTutorial from './MainApp/StepContents/SimulationTutorial';
+import Level1Simulation from './MainApp/StepContents/Level1Simulation';
+import Level2Simulation from './MainApp/StepContents/Level2Simulation';
+import Level3Simulation from './MainApp/StepContents/Level3Simulation'; 
 import PostSurvey from './MainApp/StepContents/PostSurvey';
-import SignUpInterview from './MainApp/StepContents/SignUpInterview';
-import { selectAllSteps, selectCompletedStepPaths, setCurrentStep, setCurrentUser } from './reducer';
+import CompletionPage from './MainApp/StepContents/CompletionPage';
+import { autoCompletePreviousSteps, getNextStep, selectAllSteps, selectCompletedStepPaths, setCurrentCompletedStep, setCurrentUser, setPreSurvey } from './reducer';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import type { RootState } from './store';
+import * as preSurveyClient from './MainApp/StepContents/PreSurvey/client';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 
 function App() {
   const dispatch = useDispatch();
@@ -29,28 +34,42 @@ function App() {
     }
   }, [user?.username, dispatch]);
 
-  // Update current step when route changes
+  // Load user data and sync with Cognito on mount
   useEffect(() => {
-    dispatch(setCurrentStep(location.pathname));
-  }, [location.pathname, dispatch]);
+    if (!user?.username) return;
 
-  // handle page refesh
-  useEffect(() => {
-    navigate('/informed-consent');
-  }, []);
+    const loadUserData = async () => {
+      // First, ensure current user is set in Redux (this initializes user state)
+      dispatch(setCurrentUser(user.username));
+      
+      // Load pre-survey data from the database
+      const survey = await preSurveyClient.getSurvey(user.username) as any;
+      if (survey?.answers) {
+        dispatch(setPreSurvey(survey.answers));
+      }
+      
+      // Load Current Completed Step from Cognito
+      const attrs = await fetchUserAttributes();
+      const completedStep = attrs['custom:currentCompletedStep']; 
+      
+      if (completedStep) {
+        dispatch(setCurrentCompletedStep(completedStep));
+        dispatch(autoCompletePreviousSteps(getNextStep(completedStep)));
+        
+        // Only auto-navigate if user is on an incomplete step
+        const nextStep = getNextStep(completedStep);
+        const isOnCompletedStep = completedStepPaths.includes(location.pathname);
+        const isOnNextStep = location.pathname === nextStep;
+        
+        // Only navigate if user is not on a completed step or the next step
+        if (!isOnCompletedStep && !isOnNextStep) {
+          navigate(nextStep);
+        }
+      }
+    };
 
-  // // Handle page refresh - auto-complete previous steps based on current route
-  // useEffect(() => {
-  //   // Only run this logic if user is set and steps are available
-  //   if (user?.username && steps.length > 0) {
-      
-  //     // Auto-complete all previous steps based on current route
-  //     dispatch(autoCompletePreviousSteps(location.pathname));
-      
-  //     // Set current step
-  //     dispatch(setCurrentStep(location.pathname));
-  //   }
-  // }, [user?.username, steps.length, location.pathname, dispatch]); // Simplified dependencies
+    loadUserData();
+  }, [user?.username, dispatch, navigate, location.pathname]);
   
   function AppRoutes() {
     return (
@@ -81,9 +100,12 @@ function App() {
           <Route path="/" element={<Navigate to="/informed-consent" replace />} />
           <Route path="/informed-consent" element={<InformedConsent />} />  
           <Route path="/pre-survey" element={<PreSurvey />} />
-          <Route path="/sign-up-study" element={<SignUpStudy />} />
+          <Route path="/simulation-tutorial" element={<SimulationTutorial />} />
+          <Route path="/level-1-simulation" element={<Level1Simulation />} />
+          <Route path="/level-2-simulation" element={<Level2Simulation />} />
+          <Route path="/level-3-simulation" element={<Level3Simulation />} />
           <Route path="/post-survey" element={<PostSurvey />} />
-          <Route path="/sign-up-interview" element={<SignUpInterview />} />
+          <Route path="/completion" element={<CompletionPage />} />
         </Routes>
         </Box>
       </Box>

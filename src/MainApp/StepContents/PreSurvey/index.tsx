@@ -1,50 +1,55 @@
 import { useState, useEffect } from 'react';
 import SurveyContent from '../../../shared/SurveyContent';
-// import * as client from './client';
+import * as client from './client';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { completeStep } from '../../../reducer';
+import { useDispatch, useSelector } from 'react-redux';
+import { completeStep, selectIsStepCompleted, setPreSurvey, selectPreSurvey } from '../../../reducer';
+import type { RootState } from '../../../store';
 import { Box } from '@mantine/core';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { updateUserAttributes } from 'aws-amplify/auth';
 
-export interface SurveyResponse {
-  [key: string]: number | null | string;
-  expressiveAphasia: number | null;
-  modifyLanguage: number | null;
-  hospitalDischarge: number | null;
-  showEmpathy: number | null;
-  unexpectedBehavior: number | null;
-  simulationSkills: number | null;
-  openEnded: string;
-}
+// Use a flexible type that can handle any survey structure
+export type SurveyResponse = Record<string, number | null | string>;
 
 export default function PreSurvey() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/pre-survey')(state));
+  const isCompleted = useSelector((state: RootState) => selectIsStepCompleted('/pre-survey')(state));
+  const preSurveyFromRedux = useSelector((state: RootState) => selectPreSurvey(state));
   const { user } = useAuthenticator((context) => [context.user]);
 
-  const [responses, setResponses] = useState<SurveyResponse>({
-    expressiveAphasia: null,
-    modifyLanguage: null,
-    hospitalDischarge: null,
-    showEmpathy: null,
-    unexpectedBehavior: null,
-    simulationSkills: null,
-    openEnded: ''
-  });
+  const [responses, setResponses] = useState<SurveyResponse>({});
 
+
+
+  const getSurvey = async () => {
+    if (!user?.username) return;
+    
+    try {
+      const survey = await client.getSurvey(user.username) as any;
+      if (survey?.answers) {
+        // Backend now handles number conversion, so we can use the data directly
+        const surveyData = survey.answers as SurveyResponse;
+        setResponses(surveyData);
+        // Save to Redux store
+        dispatch(setPreSurvey(surveyData));
+      }
+    } catch (error) {
+      // 忽略获取错误
+    }
+  }
+
+  // Load data from Redux if available, otherwise fetch from server
   useEffect(() => {
-    // const getSurvey = async () => {
-    //   const response = await client.getSurvey(searchParams.get('userID') || '');
-    //   if (response){
-    //     setIsSubmitted(true);
-    //   }
-    // }
-    // getSurvey();
-    // setUrlParams(searchParams);
-  }, []);
-
+    if (preSurveyFromRedux) {
+      // Use data from Redux store
+      setResponses(preSurveyFromRedux);
+    } else {
+      // Fetch from server and save to Redux
+      getSurvey();
+    }
+  }, [user?.username, isCompleted, preSurveyFromRedux]);
 
   const handleRatingChange = (field: keyof SurveyResponse, value: number) => {
     setResponses(prev => ({
@@ -61,54 +66,63 @@ export default function PreSurvey() {
   };
 
   const handleSubmit = async () => {
-    const submissionData = {
-      answers: responses,
-      userID: user?.username,
-    };
-    
-    // await client.submitSurvey(submissionData);
-    console.log(submissionData);
-    dispatch(completeStep('/pre-survey'));
-    navigate('/sign-up-study');
+    if (!user?.username) {
+      console.error('User not authenticated');
+      return;
+    }
 
+    try {
+      const submissionData = {
+        userID: user.username,
+        answers: responses,
+      };
+      
+      await client.submitSurvey(submissionData);
+      
+      // Update the current completed step in Cognito
+      await updateUserAttributes({
+        userAttributes: {
+          'custom:currentCompletedStep': 'pre-survey'
+        }
+      });
+      
+      // Save to Redux store after successful submission
+      dispatch(setPreSurvey(responses));
+      dispatch(completeStep('/pre-survey'));
+      navigate('/simulation-tutorial');
+    } catch (error) {
+      console.error('Error submitting survey:', error);
+    }
   };
 
   const questions = [
     {
-      field: 'expressiveAphasia' as keyof SurveyResponse,
+      field: 'I feel confident interviewing a client with expressive aphasia' as keyof SurveyResponse,
       text: 'I feel confident interviewing a client with expressive aphasia'
     },
     {
-      field: 'modifyLanguage' as keyof SurveyResponse,
+      field: 'I feel prepared to modify my language for clients with communication challenges' as keyof SurveyResponse,
       text: 'I feel prepared to modify my language for clients with communication challenges'
     },
     {
-      field: 'hospitalDischarge' as keyof SurveyResponse,
+      field: 'I can interpret and apply hospital discharge documentation effectively' as keyof SurveyResponse,
       text: 'I can interpret and apply hospital discharge documentation effectively'
     },
     {
-      field: 'showEmpathy' as keyof SurveyResponse,
+      field: 'I know how to show empathy while gathering clinical information' as keyof SurveyResponse,
       text: 'I know how to show empathy while gathering clinical information'
     },
     {
-      field: 'unexpectedBehavior' as keyof SurveyResponse,
+      field: 'I feel confident responding to unexpected client behavior during sessions' as keyof SurveyResponse,
       text: 'I feel confident responding to unexpected client behavior during sessions'
     },
     {
-      field: 'simulationSkills' as keyof SurveyResponse,
+      field: 'I believe this simulation will help me build skills I can apply in real clinical settings' as keyof SurveyResponse,
       text: 'I believe this simulation will help me build skills I can apply in real clinical settings'
     }
   ];
 
-  const isFormValid = () => {
-    const allRatingsAnswered = questions.every(question => 
-      responses[question.field] !== null && responses[question.field] !== 0
-    );
-    const openEndedAnswered = responses.openEnded.trim() !== '';
-    return allRatingsAnswered && openEndedAnswered;
-  };
 
-  const formValid = isFormValid();
 
   return (
     <Box
@@ -125,17 +139,17 @@ export default function PreSurvey() {
         responses={responses}
         questions={questions}
         singleOpenEndedQuestion={{
-          field: 'openEnded',
+          field: 'What are you hoping to gain from this simulation experience?',
           text: 'What are you hoping to gain from this simulation experience?'
         }}
-        formValid={formValid}
+        isCompleted={isCompleted}
         onRatingChange={handleRatingChange}
         onTextChange={handleTextChange}
         onSubmit={handleSubmit}
         title="Pre-Simulation Survey"
         ratingScale={{
-          min: 0,
-          max: 5,
+          min: 1,
+          max: 6,
           leftLabel: 'Not confident at all',
           rightLabel: 'Extremely confident'
         }}

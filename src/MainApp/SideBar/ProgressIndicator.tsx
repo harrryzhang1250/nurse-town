@@ -28,7 +28,7 @@ const ProgressIndicator: React.FC = () => {
         mb="xs"
       />
       <Text size="xs" c="dimmed">
-        {completedSteps.length} of 5 steps completed
+        {completedSteps.length} of 7 steps completed
       </Text>
     </Box>
   );

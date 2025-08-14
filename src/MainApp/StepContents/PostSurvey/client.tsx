@@ -3,7 +3,7 @@ import { post, get } from 'aws-amplify/api';
 // 配置：是否使用真实API（部署完成后设为true）
 const USE_REAL_API = true; // 重新启用真实API
 
-// 获取用户的pre-survey数据
+// 获取用户的post-survey数据
 export const getSurvey = async (userID: string) => {
   try {
     if (!USE_REAL_API) {
@@ -14,7 +14,7 @@ export const getSurvey = async (userID: string) => {
     // 真实API调用
     const restOperation = get({
       apiName: 'NurseTownAPI',
-      path: `pre-survey?userID=${userID}`,
+      path: `post-survey?userID=${userID}`,
     });
 
     const response = await restOperation.response;
@@ -30,7 +30,7 @@ export const getSurvey = async (userID: string) => {
   }
 };
 
-// 提交pre-survey数据
+// 提交post-survey数据
 export const submitSurvey = async (submissionData: {
   userID: string;
   answers: any;
@@ -39,13 +39,13 @@ export const submitSurvey = async (submissionData: {
     if (!USE_REAL_API) {
       console.log('Submitting survey data:', submissionData);
       // 模拟API响应
-      return { message: "Pre survey submitted" };
+      return { message: "Post survey submitted" };
     }
 
     // 真实API调用
     const restOperation = post({
       apiName: 'NurseTownAPI',
-      path: 'pre-survey',
+      path: 'post-survey',
       options: {
         body: submissionData
       }
@@ -59,4 +59,4 @@ export const submitSurvey = async (submissionData: {
     console.error('Error submitting survey:', error);
     throw error;
   }
-}; 
+};

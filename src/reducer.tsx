@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createSelector } from "reselect";
 
+// Define the interface for PreSurvey response - flexible structure
+export interface PreSurveyResponse {
+  [key: string]: number | null | string;
+}
+
 // Define the interface for each step
 export interface Step {
   path: string;
@@ -12,7 +17,10 @@ export interface Step {
 // Define the interface for user-specific step state
 interface UserStepState {
   steps: Step[];
-  currentStep: string;
+  currentCompletedStep: string | null;
+  currentStep: string | null; // Add currentStep for rendering
+  preSurvey: PreSurveyResponse | null;
+  postSurvey: PreSurveyResponse | null;
 }
 
 // Define the main state interface that stores data per user
@@ -25,27 +33,53 @@ interface StepState {
 const initialSteps: Step[] = [
   { path: "/informed-consent", name: "Informed Consent", isCompleted: false },
   { path: "/pre-survey", name: "Pre-Survey", isCompleted: false },
-  { path: "/sign-up-study", name: "Sign Up for Study", isCompleted: false },
+  { path: "/simulation-tutorial", name: "Simulation Tutorial", isCompleted: false },
+  { path: "/level-1-simulation", name: "Level 1 Simulation", isCompleted: false },
+  { path: "/level-2-simulation", name: "Level 2 Simulation", isCompleted: false },
+  { path: "/level-3-simulation", name: "Level 3 Simulation", isCompleted: false },
   { path: "/post-survey", name: "Post-Survey", isCompleted: false },
-  { path: "/sign-up-interview", name: "Sign Up for Interview", isCompleted: false },
+  { path: "/completion", name: "Completion", isCompleted: false },
 ];
 
 // Create initial user state
 const createInitialUserState = (): UserStepState => ({
   steps: initialSteps.map(step => ({ ...step })),
-  currentStep: "/informed-consent",
+  currentCompletedStep: null,
+  currentStep: "/informed-consent", // Start with first step
+  preSurvey: null,
+  postSurvey: null,
 });
 
 // Helper function to get step index
 const getStepIndex = (steps: Step[], stepPath: string): number => {
-  return steps.findIndex(step => step.path === stepPath);
+  // Remove leading slash for comparison
+  const cleanPath = stepPath.startsWith('/') ? stepPath.slice(1) : stepPath;
+  return steps.findIndex(step => step.path.slice(1) === cleanPath);
+};
+
+// Helper function to get next step based on completed step
+export const getNextStep = (completedStep: string | null): string => {
+  if (!completedStep) return "/informed-consent";
+  
+  // Remove leading slash for comparison
+  const cleanCompletedStep = completedStep.startsWith('/') ? completedStep.slice(1) : completedStep;
+  const stepIndex = initialSteps.findIndex(step => step.path.slice(1) === cleanCompletedStep);
+  
+  if (stepIndex === -1) return "/informed-consent";
+  
+  // If completed step is the last one, stay on it
+  if (stepIndex === initialSteps.length - 1) {
+    return initialSteps[stepIndex].path;
+  }
+  
+  // Return next step
+  return initialSteps[stepIndex + 1].path;
 };
 
 // Helper function to complete a step and all previous steps
 const completeStepAndPrevious = (userState: UserStepState, stepPath: string): void => {
   const stepIndex = getStepIndex(userState.steps, stepPath);
-  if (stepIndex === -1) return;
-
+  if (stepIndex === -1) return; // if the step is not found, return
   const timestamp = new Date().toISOString();
   
   // Complete all steps up to and including the target step
@@ -55,6 +89,10 @@ const completeStepAndPrevious = (userState: UserStepState, stepPath: string): vo
       userState.steps[i].completedAt = timestamp;
     }
   }
+  
+  // Update currentCompletedStep and currentStep
+  userState.currentCompletedStep = stepPath;
+  userState.currentStep = getNextStep(stepPath);
 };
 
 // Initial state
@@ -113,61 +151,35 @@ const stepSlice = createSlice({
       }
     },
     
-    // Mark a step as incomplete for current user
-    uncompleteStep: (state, action: PayloadAction<string>) => {
-      const stepPath = action.payload;
-      const currentUserId = state.currentUserId;
-      
-      if (!currentUserId || !state.userStates[currentUserId]) return;
-      
-      const userState = state.userStates[currentUserId];
-      const step = userState.steps.find(s => s.path === stepPath);
-      if (step) {
-        step.isCompleted = false;
-        step.completedAt = undefined;
-      }
-    },
-    
     // Set the current active step for current user
-    setCurrentStep: (state, action: PayloadAction<string>) => {
-      const currentUserId = state.currentUserId;
-      
-      if (!currentUserId || !state.userStates[currentUserId]) return;
-      
-      state.userStates[currentUserId].currentStep = action.payload;
-    },
-    
-    // Reset all steps for current user
-    resetAllSteps: (state) => {
+    setCurrentCompletedStep: (state, action: PayloadAction<string | null>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
       const userState = state.userStates[currentUserId];
-      userState.steps.forEach(step => {
-        step.isCompleted = false;
-        step.completedAt = undefined;
-      });
-      userState.currentStep = "/informed-consent";
+      userState.currentCompletedStep = action.payload;
+      // Update currentStep based on the new completed step
+      userState.currentStep = getNextStep(action.payload)
     },
-    
-    // Complete multiple steps at once for current user
-    completeMultipleSteps: (state, action: PayloadAction<string[]>) => {
-      const stepPaths = action.payload;
+
+    // Set pre-survey data for current user
+    setPreSurvey: (state, action: PayloadAction<PreSurveyResponse>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
-      const userState = state.userStates[currentUserId];
-      const timestamp = new Date().toISOString(); // Single timestamp for all
-      stepPaths.forEach(stepPath => {
-        const step = userState.steps.find(s => s.path === stepPath);
-        if (step && !step.isCompleted) {
-          step.isCompleted = true;
-          step.completedAt = timestamp;
-        }
-      });
-    }
+      state.userStates[currentUserId].preSurvey = action.payload;
+    },
+
+    // Set post-survey data for current user
+    setPostSurvey: (state, action: PayloadAction<PreSurveyResponse>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].postSurvey = action.payload;
+    },
   },
 });
 
@@ -176,10 +188,9 @@ export const {
   setCurrentUser,
   completeStep, 
   autoCompletePreviousSteps, // New action
-  uncompleteStep, 
-  setCurrentStep, 
-  resetAllSteps, 
-  completeMultipleSteps 
+  setCurrentCompletedStep, 
+  setPreSurvey,
+  setPostSurvey
 } = stepSlice.actions;
 
 // Base selectors
@@ -208,8 +219,8 @@ export const selectAllSteps = createSelector(
 
 export const selectCurrentStep = createSelector(
   [selectCurrentUserState],
-  (userState): string => {
-    return userState ? userState.currentStep : "/informed-consent";
+  (userState): string | null => {
+    return userState ? userState.currentStep : null;
   }
 );
 
@@ -247,7 +258,37 @@ export const selectProgressPercentage = createSelector(
     if (!userState) return 0;
     
     const completed = userState.steps.filter(step => step.isCompleted).length;
-    return Math.round((completed / userState.steps.length) * 100);
+    return Math.round((completed / (userState.steps.length - 1)) * 100);
+  }
+);
+
+// Pre-survey selectors
+export const selectPreSurvey = createSelector(
+  [selectCurrentUserState],
+  (userState): PreSurveyResponse | null => {
+    return userState ? userState.preSurvey : null;
+  }
+);
+
+export const selectHasPreSurvey = createSelector(
+  [selectPreSurvey],
+  (preSurvey): boolean => {
+    return preSurvey !== null;
+  }
+);
+
+// Post-survey selectors
+export const selectPostSurvey = createSelector(
+  [selectCurrentUserState],
+  (userState): PreSurveyResponse | null => {
+    return userState ? userState.postSurvey : null;
+  }
+);
+
+export const selectHasPostSurvey = createSelector(
+  [selectPostSurvey],
+  (postSurvey): boolean => {
+    return postSurvey !== null;
   }
 );
 
