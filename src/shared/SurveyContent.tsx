@@ -35,7 +35,6 @@ interface SurveyContentProps<T extends BaseSurveyResponse> {
     field: keyof T;
     text: string;
   };
-  formValid?: boolean;
   isCompleted?: boolean;
   onRatingChange: (field: keyof T, value: number) => void;
   onTextChange: (field: keyof T, value: string) => void;
@@ -49,12 +48,22 @@ interface SurveyContentProps<T extends BaseSurveyResponse> {
   };
 }
 
+// Helper function to count words
+const countWords = (text: string): number => {
+  if (!text || typeof text !== 'string') return 0;
+  return text.trim().split(/\s+/).filter(word => word.length > 0).length;
+};
+
+// Helper function to check if text meets minimum word requirement
+const meetsWordRequirement = (text: string, minWords: number = 15): boolean => {
+  return countWords(text) >= minWords;
+};
+
 function SurveyContent<T extends BaseSurveyResponse>({
   responses,
   questions,
   openEndedQuestions,
   singleOpenEndedQuestion,
-  formValid = true,
   isCompleted = false,
   onRatingChange,
   onTextChange,
@@ -67,6 +76,30 @@ function SurveyContent<T extends BaseSurveyResponse>({
     rightLabel: 'Extremely confident'
   }
 }: SurveyContentProps<T>) {
+  // Calculate form validity internally
+  const isFormValid = (): boolean => {
+    // Check if all rating questions are answered
+    const allRatingQuestionsAnswered = questions.every(question => 
+      responses[question.field] !== null && responses[question.field] !== undefined
+    );
+    
+    // Check if single open-ended question meets word requirement
+    const singleOpenEndedValid = !singleOpenEndedQuestion || 
+      (responses[singleOpenEndedQuestion.field] && 
+       meetsWordRequirement(responses[singleOpenEndedQuestion.field] as string));
+    
+    // Check if all multiple open-ended questions meet word requirement
+    const multipleOpenEndedValid = !openEndedQuestions || 
+      openEndedQuestions.every(question => 
+        responses[question.field] && 
+        meetsWordRequirement(responses[question.field] as string)
+      );
+    
+    return allRatingQuestionsAnswered && singleOpenEndedValid && multipleOpenEndedValid;
+  };
+
+  const formValid = isFormValid();
+
   const StarRating: React.FC<{ 
     field: keyof T, 
     value: number | null,
@@ -169,12 +202,12 @@ function SurveyContent<T extends BaseSurveyResponse>({
         position: 'relative',
         height: 'calc(100vh - 100px)',
         display: 'flex',
-        flexDirection: 'column' as const
+        flexDirection: 'column' as const,
+        overflow: 'auto'
       }}
     >
       <Container size="md" style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
         <Paper
-          p="xl"
           radius="lg"
           style={{
             backgroundColor: 'white',
@@ -237,7 +270,7 @@ function SurveyContent<T extends BaseSurveyResponse>({
                     textAlign: 'left',
                   }}
                 >
-                  {singleOpenEndedQuestion.text}*
+                  {singleOpenEndedQuestion.text}* (at least 15 words)
                 </Text>
                 <Textarea
                   value={responses[singleOpenEndedQuestion.field] as string}
@@ -256,7 +289,10 @@ function SurveyContent<T extends BaseSurveyResponse>({
                   styles={{
                     input: {
                       backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
-                      border: 'none',
+                      border: isCompleted ? 'none' : 
+                        (responses[singleOpenEndedQuestion.field] && 
+                         !meetsWordRequirement(responses[singleOpenEndedQuestion.field] as string)) 
+                        ? '2px solid #e53e3e' : 'none',
                       borderRadius: '10px',
                       fontSize: '16px',
                       color: isCompleted ? '#9ca3af' : '#111',
@@ -267,6 +303,17 @@ function SurveyContent<T extends BaseSurveyResponse>({
                     }
                   }}
                 />
+                {responses[singleOpenEndedQuestion.field] && 
+                 !meetsWordRequirement(responses[singleOpenEndedQuestion.field] as string) && (
+                  <Text 
+                    c="#e53e3e" 
+                    size="sm" 
+                    mt="xs"
+                    style={{ fontStyle: 'italic' }}
+                  >
+                    Please provide at least 15 words. Current word count: {countWords(responses[singleOpenEndedQuestion.field] as string)}
+                  </Text>
+                )}
               </Box>
             )}
 
@@ -284,7 +331,7 @@ function SurveyContent<T extends BaseSurveyResponse>({
                         textAlign: 'left',
                       }}
                     >
-                      {question.text}*
+                      {question.text}* (at least 15 words)
                     </Text>
                     <Textarea
                       value={responses[question.field] as string}
@@ -302,7 +349,10 @@ function SurveyContent<T extends BaseSurveyResponse>({
                       styles={{
                         input: {
                           backgroundColor: isCompleted ? '#f8f9fa' : '#f3f4f6',
-                          border: 'none',
+                          border: isCompleted ? 'none' : 
+                            (responses[question.field] && 
+                             !meetsWordRequirement(responses[question.field] as string)) 
+                            ? '2px solid #e53e3e' : 'none',
                           borderRadius: '10px',
                           fontSize: '16px',
                           color: isCompleted ? '#9ca3af' : '#111',
@@ -313,6 +363,17 @@ function SurveyContent<T extends BaseSurveyResponse>({
                         }
                       }}
                     />
+                    {responses[question.field] && 
+                     !meetsWordRequirement(responses[question.field] as string) && (
+                      <Text 
+                        c="#e53e3e" 
+                        size="sm" 
+                        mt="xs"
+                        style={{ fontStyle: 'italic' }}
+                      >
+                        Please provide at least 15 words. Current word count: {countWords(responses[question.field] as string)}
+                      </Text>
+                    )}
                   </Box>
                 ))}
               </Box>
@@ -336,7 +397,8 @@ function SurveyContent<T extends BaseSurveyResponse>({
                 color: 'white',
                 cursor: isCompleted ? 'default' : (formValid ? 'pointer' : 'not-allowed'),
                 opacity: isCompleted ? 0.8 : (formValid ? 1 : 0.7),
-                marginTop: '40px'
+                marginTop: '40px',
+                marginBottom: '60px'
               }}
               onMouseEnter={(e) => {
                 if (!isCompleted && formValid) {

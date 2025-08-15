@@ -1,8 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { createSelector } from "reselect";
 
-// Define the interface for PreSurvey response - flexible structure
-export interface PreSurveyResponse {
+// Define the interface for survey response - flexible structure
+export interface SurveyResponse {
   [key: string]: number | null | string;
 }
 
@@ -19,8 +19,11 @@ interface UserStepState {
   steps: Step[];
   currentCompletedStep: string | null;
   currentStep: string | null; // Add currentStep for rendering
-  preSurvey: PreSurveyResponse | null;
-  postSurvey: PreSurveyResponse | null;
+  preSurvey: SurveyResponse | null;
+  postSurvey: SurveyResponse | null;
+  level1Simulation: SurveyResponse | null;
+  level2Simulation: SurveyResponse | null;
+  level3Simulation: SurveyResponse | null;
 }
 
 // Define the main state interface that stores data per user
@@ -48,6 +51,9 @@ const createInitialUserState = (): UserStepState => ({
   currentStep: "/informed-consent", // Start with first step
   preSurvey: null,
   postSurvey: null,
+  level1Simulation: null,
+  level2Simulation: null, // Initialize level2Simulation
+  level3Simulation: null, // Initialize level3Simulation
 });
 
 // Helper function to get step index
@@ -164,7 +170,7 @@ const stepSlice = createSlice({
     },
 
     // Set pre-survey data for current user
-    setPreSurvey: (state, action: PayloadAction<PreSurveyResponse>) => {
+    setPreSurvey: (state, action: PayloadAction<SurveyResponse>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
@@ -173,12 +179,39 @@ const stepSlice = createSlice({
     },
 
     // Set post-survey data for current user
-    setPostSurvey: (state, action: PayloadAction<PreSurveyResponse>) => {
+    setPostSurvey: (state, action: PayloadAction<SurveyResponse>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
       state.userStates[currentUserId].postSurvey = action.payload;
+    },
+
+    // Set level 1 simulation data for current user
+    setLevel1Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level1Simulation = action.payload;
+    },
+
+    // Set level 2 simulation data for current user
+    setLevel2Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level2Simulation = action.payload;
+    },
+
+    // Set level 3 simulation data for current user
+    setLevel3Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level3Simulation = action.payload;
     },
   },
 });
@@ -190,7 +223,10 @@ export const {
   autoCompletePreviousSteps, // New action
   setCurrentCompletedStep, 
   setPreSurvey,
-  setPostSurvey
+  setPostSurvey,
+  setLevel1Simulation,
+  setLevel2Simulation,
+  setLevel3Simulation // Added setLevel3Simulation
 } = stepSlice.actions;
 
 // Base selectors
@@ -265,7 +301,7 @@ export const selectProgressPercentage = createSelector(
 // Pre-survey selectors
 export const selectPreSurvey = createSelector(
   [selectCurrentUserState],
-  (userState): PreSurveyResponse | null => {
+  (userState): SurveyResponse | null => {
     return userState ? userState.preSurvey : null;
   }
 );
@@ -280,7 +316,7 @@ export const selectHasPreSurvey = createSelector(
 // Post-survey selectors
 export const selectPostSurvey = createSelector(
   [selectCurrentUserState],
-  (userState): PreSurveyResponse | null => {
+  (userState): SurveyResponse | null => {
     return userState ? userState.postSurvey : null;
   }
 );

@@ -18,7 +18,7 @@ export default function SimulationTemplate({
     width: '100%',
     minHeight: '100%',
     background: 'white',
-    padding: '50px 20px 20px',
+    padding: '30px 20px 20px',
     boxSizing: 'border-box' as const,
     height: 'calc(100vh - 100px)',
     display: 'flex',
@@ -56,30 +56,32 @@ export default function SimulationTemplate({
     marginBottom: '16px'
   };
 
-  const getButtonStyle = (isCompleted: boolean) => ({
-    backgroundColor: isCompleted ? '#9ca3af' : '#4f46e5',
+  const getSimulationGuideButtonStyle = () => ({
+    backgroundColor: '#cd853f',
     border: 'none',
     borderRadius: '12px',
-    fontSize: '18px',
+    fontSize: '16px',
     fontWeight: 600,
-    padding: '16px 60px',
+    padding: '14px 40px',
     transition: 'all 0.3s ease',
-    minWidth: '400px',
+    minWidth: '300px',
     color: 'white',
-    cursor: isCompleted ? 'default' : 'pointer',
-    opacity: isCompleted ? 0.8 : 1,
-    marginTop: '40px'
+    cursor: 'pointer',
+    marginBottom: '20px'
   });
 
-  const getButtonText = (level: number, isCompleted: boolean): string => {
-    if (isCompleted) return 'Completed';
-    if (level === 3) return 'Complete Simulation';
-    return `Next Level`;
+  const getSimulationGuideButtonText = (level: number): string => {
+    return `Start Level ${level} Simulation`;
+  };
+
+  const handleSimulationGuide = () => {
+    // This function will be overridden by the parent component
+    onComplete();
   };
 
   return (
     <Box style={containerStyle}>
-      <Paper p="xl" radius="lg" style={paperStyle}>
+      <Paper radius="lg" style={paperStyle}>
         <Stack gap="lg">
           {/* Title Section */}
           <Center style={{ marginBottom: '40px' }}>
@@ -102,31 +104,32 @@ export default function SimulationTemplate({
             )}
           </Box>
 
+          
+
           {/* Button Section */}
           <Center>
-            <Button
-              onClick={onComplete}
-              disabled={isCompleted}
-              size="lg"
-              style={getButtonStyle(isCompleted)}
-              onMouseEnter={(e) => {
-                if (!isCompleted) {
-                  e.currentTarget.style.backgroundColor = '#4338ca';
+            <Stack gap="md" align="center" mt="xl">
+              {/* Simulation Guide Button */}
+              <Button
+                onClick={handleSimulationGuide}
+                size="lg"
+                style={getSimulationGuideButtonStyle()}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(79, 70, 229, 0.3)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isCompleted) {
-                  e.currentTarget.style.backgroundColor = '#4f46e5';
+                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = 'none';
-                }
-              }}
-            >
-              {getButtonText(level, isCompleted)}
-            </Button>
+                }}
+              >
+                {getSimulationGuideButtonText(level)}
+              </Button>
+            </Stack>
           </Center>
+
         </Stack>
       </Paper>
     </Box>
