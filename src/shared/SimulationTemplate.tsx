@@ -10,7 +10,6 @@ interface SimulationTemplateProps {
 
 export default function SimulationTemplate({ 
   level, 
-  isCompleted, 
   onComplete, 
   children 
 }: SimulationTemplateProps) {
