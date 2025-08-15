@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <MantineProvider>
       <BrowserRouter>
         <Provider store={store}>
-          <Authenticator components={components}>
+          <Authenticator components={components} loginMechanisms={['username']}>
             <App />
           </Authenticator>
         </Provider>

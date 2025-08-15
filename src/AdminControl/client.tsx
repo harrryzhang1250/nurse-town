@@ -6,11 +6,10 @@ if (!REMOTE_SERVER) {
   throw new Error('REMOTE_SERVER is not defined');
 }
 
-export const ADMIN_API = `${REMOTE_SERVER}/users`;
+export const ADMIN_API = `${REMOTE_SERVER}/cognito-user`;
 
 export const registerUser = async (data: {
-  email: string;
-  role: string;
+  username: string;
 }): Promise<RegistrationResponse> => {
   try {
     const response = await axios.post(ADMIN_API, data);
@@ -18,7 +17,8 @@ export const registerUser = async (data: {
     return {
       success: true,
       message: 'User registered successfully!',
-      userId: response.data.userID || response.data.id
+      username: response.data.username,
+      password: response.data.password
     };
   } catch (error: any) {
     console.error('Registration error:', error);
@@ -28,15 +28,15 @@ export const registerUser = async (data: {
       
       // Handle specific status codes
       switch (statusCode) {
-        case 409: // Conflict - email already exists
+        case 409: // Conflict - username already exists
           return {
             success: false,
-            message: 'This email address is already registered. Please use a different email or contact support if this is your account.'
+            message: 'This username is already taken. Please choose a different username.'
           };
         case 400: // Bad request
           return {
             success: false,
-            message: 'Invalid information provided. Please check your email and role selection.'
+            message: 'Invalid information provided. Please check your username.'
           };
         case 500: // Server error
           return {
@@ -59,10 +59,10 @@ export const registerUser = async (data: {
   }
 };
 
-export const getUser = async (userId: string) => {
+export const getUser = async (username: string) => {
   const response = await axios.get(ADMIN_API, 
     {
-      params: { userID: userId } 
+      params: { username: username } 
     }
   );
   return response.data;

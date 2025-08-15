@@ -69,20 +69,19 @@ export function createdResponse(data: any, extraHeaders?: Record<string, string>
  * @param message - Error message
  * @param details - Additional error details
  */
-export function badRequestResponse(message: string, details?: any) {
-  return createResponse(HTTP_STATUS.BAD_REQUEST, { 
-    message, 
-    ...(details && { details })
-  });
-}
+export const badRequestResponse = (message: string) => createResponse(HTTP_STATUS.BAD_REQUEST, { error: message });
+
+/**
+ * Create a conflict error response (409)
+ * @param message - Error message
+ */
+export const conflictResponse = (message: string) => createResponse(HTTP_STATUS.CONFLICT, { error: message });
 
 /**
  * Create a not found error response (404)
  * @param message - Error message
  */
-export function notFoundResponse(message: string) {
-  return createResponse(HTTP_STATUS.NOT_FOUND, { message });
-}
+export const notFoundResponse = (message: string) => createResponse(HTTP_STATUS.NOT_FOUND, { error: message });
 
 /**
  * Create a method not allowed error response (405)

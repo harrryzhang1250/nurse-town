@@ -10,8 +10,10 @@ import { preSurveyFunction } from "./functions/pre-survey-function/resource";
 import { postSurveyFunction } from "./functions/post-survey-function/resource";
 import { chatHistoryFunction } from "./functions/chat-history-function/resource";
 import { debriefFunction } from "./functions/debrief-function/resource";
+import { cognitoUserFunction } from "./functions/cognito-user-function/resource";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
+import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 const backend = defineBackend({
   auth,
@@ -20,6 +22,7 @@ const backend = defineBackend({
   postSurveyFunction,
   chatHistoryFunction,
   debriefFunction,
+  cognitoUserFunction,
 });
 
 // Function wrapper list
@@ -43,6 +46,17 @@ for (let i = 0; i < fns.length; i++) {
   tableMap[i].grantReadWriteData(fns[i].resources.lambda);
   fns[i].addEnvironment("TABLE_NAME", tableMap[i].tableName);
 }
+
+// Grant Cognito permissions to cognito-user-function and add environment variable for USER_POOL_ID
+const userPool = backend.auth.resources.userPool;
+const userPoolId = userPool.userPoolId;
+backend.cognitoUserFunction.addEnvironment("USER_POOL_ID", userPoolId);
+backend.cognitoUserFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ["cognito-idp:AdminCreateUser", "cognito-idp:AdminGetUser", "cognito-idp:AdminSetUserPassword"],
+    resources: [userPool.userPoolArn],
+  })
+);
 
 // create a new API stack
 const apiStack = backend.createStack("api-stack");
@@ -78,6 +92,10 @@ const debriefLambdaIntegration = new LambdaIntegration(
   backend.debriefFunction.resources.lambda
 );
 
+const cognitoUserLambdaIntegration = new LambdaIntegration(
+  backend.cognitoUserFunction.resources.lambda
+);
+
 // create a new resource path with no authorization for pre-survey
 const preSurveyPath = myRestApi.root.addResource("pre-survey");
 preSurveyPath.addMethod("GET", preSurveyLambdaIntegration, {
@@ -111,6 +129,15 @@ debriefPath.addMethod("GET", debriefLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 debriefPath.addMethod("POST", debriefLambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+});
+
+// create a new resource path with no authorization for cognito-user
+const cognitoUserPath = myRestApi.root.addResource("cognito-user");
+cognitoUserPath.addMethod("GET", cognitoUserLambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+});
+cognitoUserPath.addMethod("POST", cognitoUserLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 

@@ -4,47 +4,29 @@ import ResponsePage from './ResponsePage';
 import * as client from './client';
 
 export interface UserRegistration {
-  email: string;
-  role: string;
-  customRole: string;
+  username: string;
 }
 
 export interface RegistrationResponse {
   success: boolean;
   message: string;
-  userId?: string;
+  username?: string;
+  password?: string;
 }
 
 export default function AdminControl() {
   const [formData, setFormData] = useState<UserRegistration>({
-    email: '',
-    role: '',
-    customRole: ''
+    username: ''
   });
 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [response, setResponse] = useState<RegistrationResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleEmailChange = (value: string) => {
+  const handleUsernameChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
-      email: value
-    }));
-  };
-
-  const handleRoleChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      role: value,
-      customRole: value !== 'other' ? '' : prev.customRole
-    }));
-  };
-
-  const handleCustomRoleChange = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      customRole: value
+      username: value
     }));
   };
 
@@ -52,8 +34,7 @@ export default function AdminControl() {
     setIsLoading(true);
     try {
       const submissionData = {
-        email: formData.email,
-        role: formData.role === 'other' ? formData.customRole : formData.role
+        username: formData.username
       };
 
       console.log('Submitting registration:', submissionData);
@@ -82,11 +63,8 @@ export default function AdminControl() {
   };
 
   const isFormValid = () => {
-    const emailValid = formData.email.trim() !== '' && formData.email.includes('@');
-    const roleValid = formData.role !== '';
-    const customRoleValid = formData.role !== 'other' || formData.customRole.trim() !== '';
-    
-    return emailValid && roleValid && customRoleValid;
+    const usernameValid = formData.username.trim() !== '';
+    return usernameValid;
   };
 
   const formValid = isFormValid();
@@ -105,9 +83,7 @@ export default function AdminControl() {
       formData={formData}
       formValid={formValid}
       isLoading={isLoading}
-      onEmailChange={handleEmailChange}
-      onRoleChange={handleRoleChange}
-      onCustomRoleChange={handleCustomRoleChange}
+      onUsernameChange={handleUsernameChange}
       onSubmit={handleSubmit}
     />
   );

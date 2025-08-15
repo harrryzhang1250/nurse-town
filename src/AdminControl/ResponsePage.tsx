@@ -93,8 +93,8 @@ const ResponsePage: React.FC<ResponsePageProps> = ({
                 {response.message}
               </Text>
 
-              {/* User ID (if success and provided) */}
-              {isSuccess && response.userId && (
+              {/* User credentials (if success and provided) */}
+              {isSuccess && response.username && response.password && (
                 <Box
                   style={{
                     backgroundColor: '#f8f9fa',
@@ -111,7 +111,7 @@ const ResponsePage: React.FC<ResponsePageProps> = ({
                     mb="xs"
                     style={{ fontSize: '14px' }}
                   >
-                    User ID:
+                    Username:
                   </Text>
                   <Text
                     style={{
@@ -121,7 +121,26 @@ const ResponsePage: React.FC<ResponsePageProps> = ({
                       wordBreak: 'break-all'
                     }}
                   >
-                    {response.userId}
+                    {response.username}
+                  </Text>
+                  
+                  <Text
+                    fw={600}
+                    c="#111"
+                    mb="xs"
+                    style={{ fontSize: '14px' }}
+                  >
+                    Password:
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: '16px',
+                      fontFamily: 'monospace',
+                      color: '#495057',
+                      wordBreak: 'break-all'
+                    }}
+                  >
+                    {response.password}
                   </Text>
                 </Box>
               )}
@@ -171,9 +190,8 @@ const ResponsePage: React.FC<ResponsePageProps> = ({
                     e.currentTarget.style.color = '#d2691e';
                   }}
                 >
-                  {isSuccess ? 'Register Another User' : 'Try Again'}
+                  {isSuccess ? 'Return to Admin Panel' : 'Try Again'}
                 </Button>
-                
               </Stack>
             </Stack>
           </Center>

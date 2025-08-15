@@ -12,10 +12,9 @@ import Level2Simulation from './MainApp/StepContents/Level2Simulation';
 import Level3Simulation from './MainApp/StepContents/Level3Simulation'; 
 import PostSurvey from './MainApp/StepContents/PostSurvey';
 import CompletionPage from './MainApp/StepContents/CompletionPage';
-import { autoCompletePreviousSteps, getNextStep, selectAllSteps, selectCompletedStepPaths, setCurrentCompletedStep, setCurrentUser, setPreSurvey } from './reducer';
+import { autoCompletePreviousSteps, getNextStep, selectAllSteps, selectCompletedStepPaths, setCurrentCompletedStep, setCurrentUser } from './reducer';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import type { RootState } from './store';
-import * as preSurveyClient from './MainApp/StepContents/PreSurvey/client';
 import { fetchUserAttributes } from 'aws-amplify/auth';
 
 function App() {
@@ -42,12 +41,6 @@ function App() {
       // First, ensure current user is set in Redux (this initializes user state)
       dispatch(setCurrentUser(user.username));
       
-      // Load pre-survey data from the database
-      const survey = await preSurveyClient.getSurvey(user.username) as any;
-      if (survey?.answers) {
-        dispatch(setPreSurvey(survey.answers));
-      }
-      
       // Load Current Completed Step from Cognito
       const attrs = await fetchUserAttributes();
       const completedStep = attrs['custom:currentCompletedStep']; 
@@ -65,6 +58,8 @@ function App() {
         if (!isOnCompletedStep && !isOnNextStep) {
           navigate(nextStep);
         }
+      } else {
+        navigate('/informed-consent');
       }
     };
 

@@ -5,7 +5,6 @@ import {
   Text,
   Button,
   TextInput,
-  Select,
   Stack,
   Box,
   Center,
@@ -17,9 +16,7 @@ interface RegistrationFormProps {
   formData: UserRegistration;
   formValid: boolean;
   isLoading: boolean;
-  onEmailChange: (value: string) => void;
-  onRoleChange: (value: string) => void;
-  onCustomRoleChange: (value: string) => void;
+  onUsernameChange: (value: string) => void;
   onSubmit: () => void;
 }
 
@@ -27,18 +24,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   formData,
   formValid,
   isLoading,
-  onEmailChange,
-  onRoleChange,
-  onCustomRoleChange,
+  onUsernameChange,
   onSubmit
 }) => {
-  const roleOptions = [
-    { value: 'student', label: 'Student' },
-    { value: 'instructor', label: 'Instructor' },
-    { value: 'professional', label: 'Professional' },
-    { value: 'other', label: 'Other' }
-  ];
-
   if (isLoading) {
     return (
       <Box
@@ -112,7 +100,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </Center>
 
           <Stack gap="lg">
-            {/* Email Input */}
+            {/* Username Input */}
             <Box>
               <Text
                 fw={600}
@@ -123,48 +111,12 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
                   textAlign: 'left'
                 }}
               >
-                Email Address*
+                Username*
               </Text>
               <TextInput
-                value={formData.email}
-                onChange={(e) => onEmailChange(e.target.value)}
-                placeholder="Enter email address"
-                size="lg"
-                type="email"
-                style={{
-                  width: '100%'
-                }}
-                styles={{
-                  input: {
-                    backgroundColor: '#f8f9fa',
-                    border: '1px solid #dee2e6',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    color: '#111',
-                    padding: '12px 16px'
-                  }
-                }}
-              />
-            </Box>
-
-            {/* Role Selection */}
-            <Box>
-              <Text
-                fw={600}
-                c="#111"
-                mb="sm"
-                style={{
-                  fontSize: '16px',
-                  textAlign: 'left'
-                }}
-              >
-                User Role*
-              </Text>
-              <Select
-                value={formData.role}
-                onChange={(value) => onRoleChange(value || '')}
-                placeholder="Select a role"
-                data={roleOptions}
+                value={formData.username}
+                onChange={(e) => onUsernameChange(e.target.value)}
+                placeholder="Enter username"
                 size="lg"
                 style={{
                   width: '100%'
@@ -181,42 +133,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
                 }}
               />
             </Box>
-
-            {/* Custom Role Input (conditional) */}
-            {formData.role === 'other' && (
-              <Box>
-                <Text
-                  fw={600}
-                  c="#111"
-                  mb="sm"
-                  style={{
-                    fontSize: '16px',
-                    textAlign: 'left'
-                  }}
-                >
-                  Custom Role*
-                </Text>
-                <TextInput
-                  value={formData.customRole}
-                  onChange={(e) => onCustomRoleChange(e.target.value)}
-                  placeholder="Enter custom role"
-                  size="lg"
-                  style={{
-                    width: '100%'
-                  }}
-                  styles={{
-                    input: {
-                      backgroundColor: '#f8f9fa',
-                      border: '1px solid #dee2e6',
-                      borderRadius: '8px',
-                      fontSize: '16px',
-                      color: '#111',
-                      padding: '12px 16px'
-                    }
-                  }}
-                />
-              </Box>
-            )}
 
             {/* Submit Button */}
             <Center mt="xl">
