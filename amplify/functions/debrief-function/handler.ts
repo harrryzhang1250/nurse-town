@@ -103,6 +103,14 @@ async function handleSaveDebrief(body: string | null) {
       return badRequestResponse("simulationLevel must be 1, 2, or 3");
     }
 
+    // Check if record already exists
+    const existingItem = await getItem(DEBRIEF_TABLE, { 
+      userID: userId, 
+      simulationLevel: parseInt(simulationLevel) 
+    }, dynamo);
+
+    const currentTime = new Date().toISOString();
+
     // Prepare item for storage with composite key
     const item = prepareItemForStorage(
       { 
@@ -117,13 +125,25 @@ async function handleSaveDebrief(body: string | null) {
     item.userID = userId;
     item.simulationLevel = simulationLevel;
 
+    if (existingItem) {
+      // Record exists, update updatedAt
+      item.updatedAt = currentTime;
+      // Keep existing createdAt
+      item.createdAt = existingItem.createdAt;
+    } else {
+      // New record, set both createdAt and updatedAt
+      item.createdAt = currentTime;
+      item.updatedAt = currentTime;
+    }
+
     await putItem(DEBRIEF_TABLE, item, dynamo);
 
     console.log("Debrief saved successfully");
     console.log("DEBRIEF DATA", item);
     return createResponse(HTTP_STATUS.OK, { 
       message: "Debrief saved successfully",
-      timestamp: item.timestamp
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt
     });
   } catch (error) {
     console.error("Error saving debrief:", error);

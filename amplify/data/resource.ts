@@ -5,8 +5,9 @@ const schema = a.schema({
   PreSurveyAnswers: a
     .model({
       userID: a.string().required(),
-      timestamp: a.string(),
       answers: a.json(),
+      createdAt: a.string().required(),
+      updatedAt: a.string().required(),
     })
     .identifier(["userID"])
     .authorization((allow) => [allow.authenticated()]),
@@ -15,8 +16,9 @@ const schema = a.schema({
   PostSurveyAnswers: a
     .model({
       userID: a.string().required(),
-      timestamp: a.string(),
       answers: a.json(),
+      createdAt: a.string().required(),
+      updatedAt: a.string().required(),
     })
     .identifier(["userID"])
     .authorization((allow) => [allow.authenticated()]),
@@ -26,8 +28,9 @@ const schema = a.schema({
     .model({
       userID: a.string().required(),
       simulationLevel: a.integer().required(),
-      timestamp: a.string(),
       chatHistory: a.json(),
+      createdAt: a.string().required(),
+      updatedAt: a.string().required(),
     })
     .identifier(["userID", "simulationLevel"])
     .authorization((allow) => [allow.authenticated()]),
@@ -37,8 +40,9 @@ const schema = a.schema({
     .model({
       userID: a.string().required(),
       simulationLevel: a.integer().required(),
-      timestamp: a.string(),
       answers: a.json(),
+      createdAt: a.string().required(),
+      updatedAt: a.string().required(),
     })
     .identifier(["userID", "simulationLevel"])
     .authorization((allow) => [allow.authenticated()]),

@@ -103,6 +103,14 @@ async function handleSaveChatHistory(body: string | null) {
       return badRequestResponse("simulationLevel must be 1, 2, or 3");
     }
 
+    // Check if record already exists
+    const existingItem = await getItem(CHAT_HISTORY_TABLE, { 
+      userID: userId, 
+      simulationLevel: parseInt(simulationLevel) 
+    }, dynamo);
+
+    const currentTime = new Date().toISOString();
+    
     // Prepare item for storage with composite key
     const item = prepareItemForStorage(
       { 
@@ -117,13 +125,25 @@ async function handleSaveChatHistory(body: string | null) {
     item.userID = userId;
     item.simulationLevel = simulationLevel;
 
+    if (existingItem) {
+      // Record exists, update updatedAt
+      item.updatedAt = currentTime;
+      // Keep existing createdAt
+      item.createdAt = existingItem.createdAt;
+    } else {
+      // New record, set both createdAt and updatedAt
+      item.createdAt = currentTime;
+      item.updatedAt = currentTime;
+    }
+
     await putItem(CHAT_HISTORY_TABLE, item, dynamo);
 
     console.log("Chat history saved successfully");
     console.log("CHAT HISTORY DATA", item);
     return createResponse(HTTP_STATUS.OK, { 
       message: "Chat history saved successfully",
-      timestamp: item.timestamp
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt
     });
   } catch (error) {
     console.error("Error saving chat history:", error);

@@ -92,6 +92,11 @@ async function handleSubmitSurvey(body: string | null) {
       return badRequestResponse("Missing required fields: userID and answers");
     }
 
+    // Check if record already exists
+    const existingItem = await getItem(POST_SURVEY_TABLE, { userID: userId }, dynamo);
+
+    const currentTime = new Date().toISOString();
+
     // Convert answers to storage format
     const answersForStorage = stringifyNumbers(answers);
 
@@ -102,13 +107,25 @@ async function handleSubmitSurvey(body: string | null) {
       true // Include generated ID
     );
 
+    if (existingItem) {
+      // Record exists, update updatedAt
+      item.updatedAt = currentTime;
+      // Keep existing createdAt
+      item.createdAt = existingItem.createdAt;
+    } else {
+      // New record, set both createdAt and updatedAt
+      item.createdAt = currentTime;
+      item.updatedAt = currentTime;
+    }
+
     await putItem(POST_SURVEY_TABLE, item, dynamo);
 
     console.log("Post survey submitted successfully");
     console.log("POST SURVEY ANSWERS", item);
     return createResponse(HTTP_STATUS.OK, { 
       message: "Post survey submitted successfully",
-      timestamp: item.timestamp
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt
     });
   } catch (error) {
     console.error("Error submitting survey:", error);

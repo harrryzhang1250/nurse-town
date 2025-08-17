@@ -155,6 +155,8 @@ async function handleCreateUser(body: string | null) {
       message: "User created successfully",
       username: email,
       password: password,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     });
   } catch (error) {
     console.error("Error creating user:", error);
