@@ -7,6 +7,7 @@ import SimulationTemplate from './SimulationTemplate';
 import SurveyContent from './SurveyContent';
 import { completeStep, selectIsStepCompleted, type SurveyResponse } from '../reducer';
 import type { RootState } from '../store';
+import { getChatHistory } from './simulationClient';
 
 interface SimulationLevelProps {
   level: number;
@@ -54,6 +55,9 @@ export default function SimulationLevel({
   
   // State to track if simulation has been started
   const [simulationStarted, setSimulationStarted] = useState(false);
+  
+  // State to track if simulation is completed (has chat history)
+  const [simulationCompleted, setSimulationCompleted] = useState(false);
 
   // State for survey responses
   const [surveyResponses, setSurveyResponses] = useState<SurveyResponse>({
@@ -97,15 +101,40 @@ export default function SimulationLevel({
   useEffect(() => {
     if (isCompleted) {
       setSimulationStarted(true);
+      setSimulationCompleted(true);
     }
   }, [isCompleted]);
 
   const handleStartSimulation = () => {
     // Placeholder URL - replace with actual simulation website URL
-    const simulationUrl = `https://simulation-nursetown.com/level-${level}`;
+    const simulationUrl = `https://simulation-nursetown.com/?userID=${user?.username}&simulationLevel=${level}`;
     window.open(simulationUrl, '_blank');
-    // Set simulation as started to show the feedback form
+    // Set simulation as started to change button state
     setSimulationStarted(true);
+  };
+
+  const handleCompleteSimulation = async () => {
+    if (!user?.username) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      // Check if chat history exists in backend
+      const chatHistory = await getChatHistory(user.username, level);
+      
+      // Check if chatHistory exists and has the expected structure
+      if (chatHistory && typeof chatHistory === 'object' && 'chatHistory' in chatHistory && chatHistory.chatHistory) {
+        // Chat history exists, proceed to survey
+        setSimulationCompleted(true);
+      } else {
+        // No chat history found
+        alert('No simulation data found. Please complete the simulation first.');
+      }
+    } catch (error: any) {
+      console.error('Error checking simulation completion:', error);
+      alert('No simulation data found. Please complete the simulation first.');
+    }
   };
 
   const handleSubmit = async () => {
@@ -143,12 +172,13 @@ export default function SimulationLevel({
 
   return (
     <div style={{ padding: '50px 20px 20px', minHeight: '100vh', backgroundColor: 'white' }}>
-      {!simulationStarted ? (
-        // If simulation hasn't started, show the simulation template
+      {!simulationCompleted ? (
+        // Show simulation template with dynamic button state
         <SimulationTemplate
           level={level}
           isCompleted={isCompleted}
-          onComplete={handleStartSimulation}
+          onComplete={simulationStarted ? handleCompleteSimulation : handleStartSimulation}
+          simulationStarted={simulationStarted}
         >
           <div>
             <h3>Level {level} Simulation: {patientType}</h3>
@@ -157,7 +187,7 @@ export default function SimulationLevel({
           </div>
         </SimulationTemplate>
       ) : (
-        // If simulation has started, show the survey feedback
+        // If simulation is completed, show the survey feedback
         <SurveyContent
           responses={surveyResponses}
           questions={[

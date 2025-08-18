@@ -30,6 +30,33 @@ export const getDebrief = async (userID: string, simulationLevel: number) => {
   }
 };
 
+// 获取用户的Chat History数据
+export const getChatHistory = async (userID: string, simulationLevel: number) => {
+  try {
+    if (!USE_REAL_API) {
+      console.log(`getChatHistory called for userID: ${userID}, level: ${simulationLevel}`);
+      return null; // 模拟没有找到数据
+    }
+
+    // 真实API调用
+    const restOperation = get({
+      apiName: 'NurseTownAPI',
+      path: `chat-history?userID=${userID}&simulationLevel=${simulationLevel}`,
+    });
+
+    const response = await restOperation.response;
+    const data = await response.body.json();
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting chat history:', error);
+    if (!USE_REAL_API) {
+      return null; // 模拟模式下忽略错误
+    }
+    throw error;
+  }
+};
+
 // 提交Simulation debrief数据
 export const submitDebrief = async (submissionData: {
   userID: string;
@@ -58,6 +85,34 @@ export const submitDebrief = async (submissionData: {
     return data;
   } catch (error) {
     console.error('Error submitting debrief:', error);
+    throw error;
+  }
+};
+
+// 提交Chat History数据
+export const submitChatHistory = async (submissionData: any) => {
+  try {
+    if (!USE_REAL_API) {
+      console.log('Submitting chat history data:', submissionData);
+      // 模拟API响应
+      return { message: `Level ${submissionData.simulationLevel} Chat history submitted` };
+    }
+
+    // 真实API调用
+    const restOperation = post({
+      apiName: 'NurseTownAPI',
+      path: 'chat-history',
+      options: {
+        body: submissionData
+      }
+    });
+
+    const response = await restOperation.response;
+    const data = await response.body.json();
+    
+    return data;
+  } catch (error) {
+    console.error('Error submitting chat history:', error);
     throw error;
   }
 };

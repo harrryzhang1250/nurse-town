@@ -6,12 +6,14 @@ interface SimulationTemplateProps {
   isCompleted: boolean;
   onComplete: () => void;
   children?: React.ReactNode;
+  simulationStarted?: boolean;
 }
 
 export default function SimulationTemplate({ 
   level, 
   onComplete, 
-  children 
+  children,
+  simulationStarted
 }: SimulationTemplateProps) {
   const containerStyle = {
     width: '100%',
@@ -55,23 +57,35 @@ export default function SimulationTemplate({
     marginBottom: '16px'
   };
 
-  const getSimulationGuideButtonStyle = () => ({
-    backgroundColor: '#cd853f',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
+  const stepStyle = {
+    fontSize: '18px',
     fontWeight: 600,
-    padding: '14px 40px',
-    transition: 'all 0.3s ease',
-    minWidth: '300px',
-    color: 'white',
-    cursor: 'pointer',
-    marginBottom: '20px'
-  });
+    color: '#059669',
+    marginBottom: '8px'
+  };
+
+  const stepTextStyle = {
+    fontSize: '16px',
+    color: '#6b7280',
+    marginBottom: '16px'
+  };
 
   const getSimulationGuideButtonText = (level: number): string => {
-    return `Start Level ${level} Simulation`;
+    return simulationStarted ? `Complete Level ${level} Simulation` : `Start Level ${level} Simulation`;
   };
+
+  const getSimulationGuideButtonStyle = () => ({
+    backgroundColor: simulationStarted ? '#cd853f' : '#007bff',
+    border: 'none',
+    fontSize: '18px',
+    fontWeight: 600,
+    padding: '16px 40px',
+    transition: 'all 0.3s ease',
+    minWidth: '320px',
+    color: 'white',
+    cursor: 'pointer',
+    boxShadow: simulationStarted ? '0 4px 12px rgba(40, 167, 69, 0.3)' : '0 4px 12px rgba(0, 123, 255, 0.3)'
+  });
 
   const handleSimulationGuide = () => {
     // This function will be overridden by the parent component
@@ -103,7 +117,20 @@ export default function SimulationTemplate({
             )}
           </Box>
 
-          
+          {/* Step Information */}
+          <Box style={{ marginBottom: '30px' }}>
+            <Text style={stepStyle}>Step 1: Start the Simulation</Text>
+            <Text style={stepTextStyle}>
+              Click the button below to open the Level {level} simulation in a new window. 
+              Complete all required interactions in the simulation.
+            </Text>
+            
+            <Text style={stepStyle}>Step 2: Return and Confirm</Text>
+            <Text style={stepTextStyle}>
+              After completing the simulation, return to this page and click the "Complete Simulation" 
+              button to verify your progress and proceed to the feedback survey.
+            </Text>
+          </Box>
 
           {/* Button Section */}
           <Center>
@@ -114,14 +141,12 @@ export default function SimulationTemplate({
                 size="lg"
                 style={getSimulationGuideButtonStyle()}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 25px rgba(16, 185, 129, 0.3)';
+                  e.currentTarget.style.boxShadow = simulationStarted ? '0 8px 20px rgba(148, 101, 14, 0.4)' : '0 8px 20px rgba(145, 126, 33, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
+                  e.currentTarget.style.boxShadow = simulationStarted ? '0 4px 12px rgba(40, 167, 69, 0.3)' : '0 4px 12px rgba(0, 123, 255, 0.3)';
                 }}
               >
                 {getSimulationGuideButtonText(level)}
