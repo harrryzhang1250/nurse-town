@@ -109,7 +109,7 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
   restApiName: "NurseTownAPI",
   deploy: true,
   deployOptions: {
-    stageName: process.env.AMPLIFY_ENV,
+    stageName: process.env.AMPLIFY_ENV || "dev",
   },
   defaultCorsPreflightOptions: {
     allowOrigins: Cors.ALL_ORIGINS,
