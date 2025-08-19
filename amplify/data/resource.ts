@@ -24,7 +24,7 @@ const schema = a.schema({
     .authorization((allow) => [allow.authenticated()]),
 
   // Chat History table
-  ChatHistory: a
+  SimulationData: a
     .model({
       userID: a.string().required(),
       simulationLevel: a.integer().required(),

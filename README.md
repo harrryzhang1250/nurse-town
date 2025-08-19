@@ -31,7 +31,7 @@ nurse-town/
 │   ├── data/                        # Data models
 │   │   └── resource.ts             # DynamoDB table definitions
 │   ├── functions/                   # Lambda functions (manually created)
-│   │   ├── chat-history-function/  # Chat history management
+│   │   ├── simulation-data-function/  # Simulation data management
 │   │   │   ├── handler.ts          # Lambda function logic
 │   │   │   ├── resource.ts         # Function resource definition
 │   │   │   └── package.json        # Function dependencies
@@ -297,7 +297,7 @@ Use the shared `simulationClient.ts` for API calls or create new client function
 
 - **PreSurveyAnswers**: Pre-simulation survey responses
 - **PostSurveyAnswers**: Post-simulation survey responses  
-- **ChatHistory**: Simulation interaction logs
+- **SimulationData**: Simulation interaction logs
 - **DebriefAnswers**: Simulation debrief responses
 
 ### Key Fields
@@ -321,8 +321,8 @@ The platform uses AWS Cognito for user authentication:
 
 ### Endpoints
 
-- **POST** `/chat-history` - Save chat history
-- **GET** `/chat-history` - Retrieve chat history
+- **POST** `/simulation-data` - Save simulation data
+- **GET** `/simulation-data` - Retrieve simulation data
 - **POST** `/debrief` - Submit debrief responses
 - **GET** `/debrief` - Get debrief data
 - **POST** `/pre-survey` - Submit pre-simulation survey
@@ -340,7 +340,7 @@ All endpoints support additional fields that are automatically stored:
 {
   "userID": "user123",
   "simulationLevel": 1,
-  "chatHistory": {...},
+  "simulationData": {...},
   "sessionNotes": "User performed well",  // Additional field
   "difficulty": "medium"                  // Additional field
 }

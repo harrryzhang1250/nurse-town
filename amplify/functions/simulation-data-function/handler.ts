@@ -17,7 +17,7 @@ import {
 
 // Initialize DynamoDB client
 const dynamo = createDynamoDbClient();
-const CHAT_HISTORY_TABLE = process.env.TABLE_NAME;
+const SIMULATION_DATA_TABLE = process.env.TABLE_NAME;
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   console.log('Event received:', JSON.stringify(event, null, 2));
@@ -31,18 +31,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   // Validate table name environment variable
-  if (!CHAT_HISTORY_TABLE) {
+  if (!SIMULATION_DATA_TABLE) {
     console.error("TABLE_NAME environment variable is not set");
     return serverErrorResponse("Configuration error");
   }
 
   try {
     if (method === "GET") {
-      return await handleGetChatHistory(queryParams);
+      return await handleGetSimulationData(queryParams);
     }
     
     if (method === "POST") {
-      return await handleSaveChatHistory(event.body);
+      return await handleSaveSimulationData(event.body);
     }
 
     return methodNotAllowedResponse(["GET", "POST", "OPTIONS"]);
@@ -53,9 +53,9 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 };
 
 /**
- * Handle GET request to retrieve chat history
+ * Handle GET request to retrieve simulation data
  */
-async function handleGetChatHistory(queryParams: Record<string, string>) {
+async function handleGetSimulationData(queryParams: Record<string, string>) {
   const userId = queryParams.userID;
   const simulationLevel = queryParams.simulationLevel;
   
@@ -65,32 +65,32 @@ async function handleGetChatHistory(queryParams: Record<string, string>) {
 
   try {
     if (simulationLevel) {
-      // Get specific simulation level chat history
-      const item = await getItem(CHAT_HISTORY_TABLE, { 
+      // Get specific simulation level data
+      const item = await getItem(SIMULATION_DATA_TABLE, { 
         userID: userId, 
         simulationLevel: parseInt(simulationLevel) 
       }, dynamo);
       
       if (!item) {
-        return notFoundResponse("Chat history not found for this user and simulation level");
+        return notFoundResponse("Simulation data not found for this user and simulation level");
       }
 
       return createResponse(HTTP_STATUS.OK, item);
     } else {
-      // Get all chat history for user (would need a different query approach)
+      // Get all simulation data for user (would need a different query approach)
       // For now, return error suggesting to specify simulation level
       return badRequestResponse("Please specify simulationLevel parameter");
     }
   } catch (error) {
-    console.error("Error getting chat history:", error);
-    return serverErrorResponse("Failed to retrieve chat history");
+    console.error("Error getting simulation data:", error);
+    return serverErrorResponse("Failed to retrieve simulation data");
   }
 }
 
 /**
- * Handle POST request to save new chat history
+ * Handle POST request to save new simulation data
  */
-async function handleSaveChatHistory(body: string | null) {
+async function handleSaveSimulationData(body: string | null) {
   try {
     const payload = parseJsonBody(body);
     const { userID: userId, simulationLevel, chatHistory, ...additionalFields } = payload;
@@ -104,7 +104,7 @@ async function handleSaveChatHistory(body: string | null) {
     }
 
     // Check if record already exists
-    const existingItem = await getItem(CHAT_HISTORY_TABLE, { 
+    const existingItem = await getItem(SIMULATION_DATA_TABLE, { 
       userID: userId, 
       simulationLevel: parseInt(simulationLevel) 
     }, dynamo);
@@ -150,23 +150,23 @@ async function handleSaveChatHistory(body: string | null) {
       }
     }
 
-    await putItem(CHAT_HISTORY_TABLE, item, dynamo);
+    await putItem(SIMULATION_DATA_TABLE, item, dynamo);
 
-    console.log("Chat history saved successfully");
-    console.log("CHAT HISTORY DATA", item);
+    console.log("Simulation data saved successfully");
+    console.log("SIMULATION DATA", item);
     return createResponse(HTTP_STATUS.OK, { 
-      message: "Chat history saved successfully",
+      message: "Simulation data saved successfully",
       createdAt: item.createdAt,
       updatedAt: item.updatedAt,
       additionalFields: Object.keys(additionalFields) // Return info about what additional fields were processed
     });
   } catch (error) {
-    console.error("Error saving chat history:", error);
+    console.error("Error saving simulation data:", error);
     
     if (error instanceof Error && error.message.includes("Invalid")) {
-      return badRequestResponse(error.message);
+      return serverErrorResponse("Failed to save simulation data");
     }
     
-    return serverErrorResponse("Failed to save chat history");
+    return serverErrorResponse("Failed to save simulation data");
   }
 }

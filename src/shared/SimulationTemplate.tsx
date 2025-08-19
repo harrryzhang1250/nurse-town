@@ -6,14 +6,12 @@ interface SimulationTemplateProps {
   isCompleted: boolean;
   onComplete: () => void;
   children?: React.ReactNode;
-  simulationStarted?: boolean;
 }
 
 export default function SimulationTemplate({ 
   level, 
   onComplete, 
-  children,
-  simulationStarted
+  children
 }: SimulationTemplateProps) {
   const containerStyle = {
     width: '100%',
@@ -71,11 +69,11 @@ export default function SimulationTemplate({
   };
 
   const getSimulationGuideButtonText = (level: number): string => {
-    return simulationStarted ? `Complete Level ${level} Simulation` : `Start Level ${level} Simulation`;
+    return `Complete Level ${level} Simulation`;
   };
 
   const getSimulationGuideButtonStyle = () => ({
-    backgroundColor: simulationStarted ? '#cd853f' : '#007bff',
+    backgroundColor: '#cd853f',
     border: 'none',
     fontSize: '18px',
     fontWeight: 600,
@@ -84,7 +82,7 @@ export default function SimulationTemplate({
     minWidth: '320px',
     color: 'white',
     cursor: 'pointer',
-    boxShadow: simulationStarted ? '0 4px 12px rgba(40, 167, 69, 0.3)' : '0 4px 12px rgba(0, 123, 255, 0.3)'
+    boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
   });
 
   const handleSimulationGuide = () => {
@@ -119,15 +117,16 @@ export default function SimulationTemplate({
 
           {/* Step Information */}
           <Box style={{ marginBottom: '30px' }}>
-            <Text style={stepStyle}>Step 1: Start the Simulation</Text>
+            <Text style={stepStyle}>Step 1: Launch and Login to the Application</Text>
             <Text style={stepTextStyle}>
-              Click the button below to open the Level {level} simulation in a new window. 
-              Complete all required interactions in the simulation.
+              Open the application you downloaded earlier on your computer. 
+              Use your User Study Portal username and password to log in to the application.
             </Text>
             
-            <Text style={stepStyle}>Step 2: Return and Confirm</Text>
+            <Text style={stepStyle}>Step 2: Complete Simulation and Sign Out</Text>
             <Text style={stepTextStyle}>
-              After completing the simulation, return to this page and click the "Complete Simulation" 
+              Complete all required interactions in the simulation. After finishing, remember to sign out 
+              from the application, then return to this page and click the "Complete Simulation" 
               button to verify your progress and proceed to the feedback survey.
             </Text>
           </Box>
@@ -142,11 +141,11 @@ export default function SimulationTemplate({
                 style={getSimulationGuideButtonStyle()}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = simulationStarted ? '0 8px 20px rgba(148, 101, 14, 0.4)' : '0 8px 20px rgba(145, 126, 33, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(148, 101, 14, 0.4)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = simulationStarted ? '0 4px 12px rgba(40, 167, 69, 0.3)' : '0 4px 12px rgba(0, 123, 255, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
                 }}
               >
                 {getSimulationGuideButtonText(level)}

@@ -9,10 +9,11 @@ import {
 import { CognitoIdentityProviderClient, ListUserPoolClientsCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { preSurveyFunction } from "./functions/pre-survey-function/resource";
 import { postSurveyFunction } from "./functions/post-survey-function/resource";
-import { chatHistoryFunction } from "./functions/chat-history-function/resource";
+import { simulationDataFunction } from "./functions/simulation-data-function/resource";
 import { debriefFunction } from "./functions/debrief-function/resource";
 import { cognitoUserFunction } from "./functions/cognito-user-function/resource";
 import { authFunction } from "./functions/auth-function/resource";
+import { downloadUrlFunction } from "./functions/download-url-function/resource";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
@@ -23,17 +24,18 @@ const backend = defineBackend({
   data,
   preSurveyFunction,
   postSurveyFunction,
-  chatHistoryFunction,
+  simulationDataFunction,
   debriefFunction,
   cognitoUserFunction,
   authFunction,
+  downloadUrlFunction,
 });
 
 // Function wrapper list
 const fns = [
   backend.preSurveyFunction,
   backend.postSurveyFunction,
-  backend.chatHistoryFunction,
+  backend.simulationDataFunction,
   backend.debriefFunction,
 ];
 
@@ -41,7 +43,7 @@ const fns = [
 const tableMap = [
   backend.data.resources.tables["PreSurveyAnswers"],
   backend.data.resources.tables["PostSurveyAnswers"],
-  backend.data.resources.tables["ChatHistory"],
+  backend.data.resources.tables["SimulationData"],
   backend.data.resources.tables["DebriefAnswers"],
 ];
 
@@ -89,6 +91,16 @@ backend.authFunction.resources.lambda.addToRolePolicy(
   })
 );
 
+// Configure download URL function
+backend.downloadUrlFunction.addEnvironment("S3_BUCKET_NAME", "unity-simulation-app");
+backend.downloadUrlFunction.addEnvironment("APP_NAME", "system_design.jpg");
+backend.downloadUrlFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ["s3:GetObject"],
+    resources: ["arn:aws:s3:::unity-simulation-app/*"],
+  })
+);
+
 // create a new API stack
 const apiStack = backend.createStack("api-stack");
 
@@ -97,7 +109,7 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
   restApiName: "NurseTownAPI",
   deploy: true,
   deployOptions: {
-    stageName: "dev",
+    stageName: process.env.AMPLIFY_ENV,
   },
   defaultCorsPreflightOptions: {
     allowOrigins: Cors.ALL_ORIGINS,
@@ -115,8 +127,8 @@ const postSurveyLambdaIntegration = new LambdaIntegration(
   backend.postSurveyFunction.resources.lambda
 );
 
-const chatHistoryLambdaIntegration = new LambdaIntegration(
-  backend.chatHistoryFunction.resources.lambda
+const simulationDataLambdaIntegration = new LambdaIntegration(
+  backend.simulationDataFunction.resources.lambda
 );
 
 const debriefLambdaIntegration = new LambdaIntegration(
@@ -129,6 +141,10 @@ const cognitoUserLambdaIntegration = new LambdaIntegration(
 
 const authLambdaIntegration = new LambdaIntegration(
   backend.authFunction.resources.lambda
+);
+
+const downloadUrlLambdaIntegration = new LambdaIntegration(
+  backend.downloadUrlFunction.resources.lambda
 );
 
 // create a new resource path with no authorization for pre-survey
@@ -149,12 +165,12 @@ postSurveyPath.addMethod("POST", postSurveyLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 
-// create a new resource path with no authorization for chat-history
-const chatHistoryPath = myRestApi.root.addResource("chat-history");
-chatHistoryPath.addMethod("GET", chatHistoryLambdaIntegration, {
+// create a new resource path with no authorization for simulation-data
+const simulationDataPath = myRestApi.root.addResource("simulation-data");
+simulationDataPath.addMethod("GET", simulationDataLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
-chatHistoryPath.addMethod("POST", chatHistoryLambdaIntegration, {
+simulationDataPath.addMethod("POST", simulationDataLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 
@@ -182,6 +198,12 @@ authPath.addResource("login").addMethod("POST", authLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 authPath.addResource("signout").addMethod("POST", authLambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+});
+
+// create a new resource path for download URL
+const downloadPath = myRestApi.root.addResource("download-url");
+downloadPath.addMethod("POST", downloadUrlLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 

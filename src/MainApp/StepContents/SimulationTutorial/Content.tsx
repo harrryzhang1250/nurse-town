@@ -1,4 +1,6 @@
-import { Box, Text, Button, Paper, Stack, Center, Grid, List } from '@mantine/core';
+import { Box, Text, Button, Paper, Stack, Center, Grid, List, Radio, Group, Alert, Loader } from '@mantine/core';
+import { useState } from 'react';
+import { downloadClient } from './client';
 
 interface SimulationTutorialContentProps {
   isCompleted: boolean;
@@ -6,6 +8,11 @@ interface SimulationTutorialContentProps {
 }
 
 export default function SimulationTutorialContent({ isCompleted, onComplete }: SimulationTutorialContentProps) {
+  const [selectedOS, setSelectedOS] = useState<'windows' | 'mac' | ''>('');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadComplete, setDownloadComplete] = useState(false);
+  const [downloadError, setDownloadError] = useState<string>('');
+
   const containerStyle = {
     paddingTop: '50px',
     minHeight: '100vh',
@@ -62,8 +69,16 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
     marginBottom: '20px'
   };
 
-  const getButtonStyle = (isCompleted: boolean) => ({
-    backgroundColor: isCompleted ? '#9ca3af' : '#4f46e5',
+  const downloadSectionStyle = {
+    backgroundColor: '#f0f9ff',
+    border: '2px solid #0ea5e9',
+    borderRadius: '12px',
+    padding: '25px',
+    marginBottom: '30px'
+  };
+
+  const getButtonStyle = (isEnabled: boolean) => ({
+    backgroundColor: isEnabled ? '#4f46e5' : '#9ca3af',
     border: 'none',
     borderRadius: '12px',
     fontSize: '18px',
@@ -72,10 +87,35 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
     transition: 'all 0.3s ease',
     minWidth: '200px',
     color: 'white',
-    cursor: isCompleted ? 'default' : 'pointer',
-    opacity: isCompleted ? 0.8 : 1,
-    marginTop: '40px'
+    cursor: isEnabled ? 'pointer' : 'default',
+    opacity: isEnabled ? 1 : 0.8,
+    marginTop: '20px'
   });
+
+  const handleDownload = async () => {
+    if (!selectedOS) return;
+
+    setIsDownloading(true);
+    setDownloadError('');
+
+    try {
+      // Get download URL
+      const data = await downloadClient.getDownloadUrl(selectedOS);
+      
+      // Trigger download
+      downloadClient.triggerDownload(data.downloadUrl, `simulation-${selectedOS}`);
+      
+      // Mark download complete
+      setDownloadComplete(true);
+      setIsDownloading(false);
+    } catch (error) {
+      console.error('Download error:', error);
+      setDownloadError('Download failed. Please try again.');
+      setIsDownloading(false);
+    }
+  };
+
+  const canBeginSimulation = downloadComplete;
 
   return (
     <Box style={containerStyle}>
@@ -99,6 +139,76 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
               </Box>
             </Box>
           </Center>
+
+          {/* Download Section */}
+          <Box style={downloadSectionStyle}>
+            <Text style={sectionTitleStyle}>Download Simulation Application</Text>
+            <Text style={bodyTextStyle}>
+              Before you can begin the simulation, you need to download and install the application on your computer.
+            </Text>
+            
+            <Text style={subsectionTitleStyle}>Step 1: Select Your Operating System</Text>
+            <Radio.Group
+              value={selectedOS}
+              onChange={(value: string) => setSelectedOS(value as 'windows' | 'mac')}
+              name="operatingSystem"
+              label="Choose your operating system:"
+              style={{ marginBottom: '20px' }}
+            >
+              <Group mt="xs">
+                <Radio value="windows" label="Windows" />
+                <Radio value="mac" label="macOS" />
+              </Group>
+            </Radio.Group>
+
+            <Text style={subsectionTitleStyle}>Step 2: Download the Application</Text>
+            <Text style={bodyTextStyle}>
+              Click the download button below to get the application for your selected operating system. 
+              The file will be saved to your browser's default download folder.
+            </Text>
+
+            <Center>
+              <Button
+                onClick={handleDownload}
+                disabled={!selectedOS || isDownloading}
+                size="lg"
+                style={{
+                  backgroundColor: selectedOS && !isDownloading ? '#0ea5e9' : '#9ca3af',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  padding: '14px 30px',
+                  transition: 'all 0.3s ease',
+                  minWidth: '180px',
+                  color: 'white',
+                  cursor: selectedOS && !isDownloading ? 'pointer' : 'default',
+                  opacity: selectedOS && !isDownloading ? 1 : 0.8,
+                }}
+              >
+                {isDownloading ? (
+                  <Group gap="xs">
+                    <Loader size="sm" color="white" />
+                    Downloading...
+                  </Group>
+                ) : (
+                  'Download Application'
+                )}
+              </Button>
+            </Center>
+
+            {downloadError && (
+              <Alert color="red" title="Download Error" style={{ marginTop: '15px' }}>
+                {downloadError}
+              </Alert>
+            )}
+
+            {downloadComplete && (
+              <Alert color="green" title="Download Complete!" style={{ marginTop: '15px' }}>
+                The application has been downloaded successfully. You can now begin the simulation.
+              </Alert>
+            )}
+          </Box>
 
           <Box style={highlightBoxStyle}>
             <Text style={bodyTextStyle}>
@@ -209,18 +319,18 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
           <Center>
             <Button
               onClick={onComplete}
-              disabled={isCompleted}
+              disabled={!canBeginSimulation || isCompleted}
               size="lg"
-              style={getButtonStyle(isCompleted)}
+              style={getButtonStyle(canBeginSimulation && !isCompleted)}
               onMouseEnter={(e) => {
-                if (!isCompleted) {
+                if (canBeginSimulation && !isCompleted) {
                   e.currentTarget.style.backgroundColor = '#cd853f';
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 16px rgba(168, 140, 118, 0.28)';
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isCompleted) {
+                if (canBeginSimulation && !isCompleted) {
                   e.currentTarget.style.backgroundColor = '#4f46e5';
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.boxShadow = '';
