@@ -6,11 +6,11 @@ This document provides API interface specifications for the Unity development te
 ## Environment Configuration
 
 ### Sandbox (Development Environment)
-- **Base URL**: `https://bhyalmu7i1.execute-api.us-east-1.amazonaws.com/prod`
+- **Base URL**: `https://gu6dg3g185.execute-api.us-west-2.amazonaws.com/dev`
 - **Purpose**: Development and testing, data will not affect production environment
 
 ### Production (Production Environment)
-- **Base URL**: `https://dxa66vt2tl.execute-api.us-east-1.amazonaws.com/prod`
+- **Base URL**: `https://bhyalmu7i1.execute-api.us-east-1.amazonaws.com/prod`
 - **Purpose**: Production user access, data will be permanently stored
 
 ## API Endpoints
@@ -34,7 +34,7 @@ This document provides API interface specifications for the Unity development te
 ```json
 {
   "message": "Login successful",
-  "userID": "user001@nursetown.com",
+  "userID": "7811e3a0-a061-70d2-c7d6-315cd36795c4",
   "simulationLevel": 1
 }
 ```
@@ -95,7 +95,7 @@ Content-Type: application/json
 **Request Body**:
 ```json
 {
-  "userID": "user001@nursetown.com",
+  "userID": "7811e3a0-a061-70d2-c7d6-315cd36795c4",
   "simulationLevel": 1,
   "chatHistory": {
     "conversation": [
@@ -109,20 +109,13 @@ Content-Type: application/json
         "message": "I'm feeling a bit nervous about the session.",
         "timestamp": "2025-08-19T18:00:05.000Z"
       }
-    ],
-    "sessionDuration": 1800,
-    "interactionCount": 15,
-    "patientResponses": [
-      "I'm feeling a bit nervous about the session.",
-      "Yes, I understand what you're asking.",
-      "I think the exercises are helpful."
     ]
   }
 }
 ```
 
 **Field Descriptions**:
-- `userID`: User email address (required)
+- `userID`:  UUID（Universally Unique Identifier） - e.g. 7811e3a0-a061-70d2-c7d6-315cd36795c4
 - `simulationLevel`: Simulation level 1, 2, or 3 (required)
 - `simulationData`: Simulation data object (required)
 -  all the other additional attributes in any type
@@ -159,19 +152,16 @@ Content-Type: application/json
 
 **Query Parameters**:
 ```
-?userID=user001@nursetown.com&simulationLevel=1
+?userID=7811e3a0-a061-70d2-c7d6-315cd36795c4&simulationLevel=1
 ```
 
 **Success Response** (200):
 ```json
 {
-  "userID": "user001@nursetown.com",
+  "userID": "7811e3a0-a061-70d2-c7d6-315cd36795c4",
   "simulationLevel": 1,
   "chatHistory": {
-    "conversation": [...],
-    "sessionDuration": 1800,
-    "interactionCount": 15,
-    "patientResponses": [...]
+    "conversation": [...]
   },
 
   "createdAt": "2025-08-19T18:00:00.000Z",

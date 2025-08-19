@@ -91,13 +91,23 @@ backend.authFunction.resources.lambda.addToRolePolicy(
   })
 );
 
-// Configure download URL function
-backend.downloadUrlFunction.addEnvironment("S3_BUCKET_NAME", "unity-simulation-app");
+// Configure download URL function for prodtion
+let s3BucketName = "unity-simulation-app";
+
+// Change s3 bucket name for sandbox environments
+if (process.env.AWS_REGION === "us-west-2") {
+  s3BucketName = "unity-simulation-app-us-west-2";
+}
+if (process.env.AWS_REGION === "us-east-2") {
+  s3BucketName = "unity-simulation-app-us-east-2";
+}
+
+backend.downloadUrlFunction.addEnvironment("S3_BUCKET_NAME", s3BucketName);
 backend.downloadUrlFunction.addEnvironment("APP_NAME", "system_design.jpg");
 backend.downloadUrlFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     actions: ["s3:GetObject"],
-    resources: ["arn:aws:s3:::unity-simulation-app/*"],
+    resources: [`arn:aws:s3:::${s3BucketName}/*`],
   })
 );
 
