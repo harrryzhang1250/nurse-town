@@ -93,7 +93,7 @@ async function handleGetDebrief(queryParams: Record<string, string>) {
 async function handleSaveDebrief(body: string | null) {
   try {
     const payload = parseJsonBody(body);
-    const { userID: userId, simulationLevel, answers } = payload;
+    const { userID: userId, simulationLevel, answers, ...additionalFields } = payload;
 
     if (!userId || !simulationLevel || !answers) {
       return badRequestResponse("Missing required fields: userID, simulationLevel, and answers");
@@ -111,12 +111,16 @@ async function handleSaveDebrief(body: string | null) {
 
     const currentTime = new Date().toISOString();
 
+    // Prepare base item with required fields
+    const baseItem = {
+      simulationLevel,
+      answers,
+      ...additionalFields // Include any additional fields from payload
+    };
+
     // Prepare item for storage with composite key
     const item = prepareItemForStorage(
-      { 
-        simulationLevel,
-        answers 
-      },
+      baseItem,
       userId,
       false // Don't include generated ID, use composite key
     );
@@ -130,10 +134,20 @@ async function handleSaveDebrief(body: string | null) {
       item.updatedAt = currentTime;
       // Keep existing createdAt
       item.createdAt = existingItem.createdAt;
+      
+      // Log what additional fields are being updated
+      if (Object.keys(additionalFields).length > 0) {
+        console.log("Updating additional fields:", Object.keys(additionalFields));
+      }
     } else {
       // New record, set both createdAt and updatedAt
       item.createdAt = currentTime;
       item.updatedAt = currentTime;
+      
+      // Log what additional fields are being added
+      if (Object.keys(additionalFields).length > 0) {
+        console.log("Adding new fields:", Object.keys(additionalFields));
+      }
     }
 
     await putItem(DEBRIEF_TABLE, item, dynamo);
@@ -143,7 +157,8 @@ async function handleSaveDebrief(body: string | null) {
     return createResponse(HTTP_STATUS.OK, { 
       message: "Debrief saved successfully",
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt
+      updatedAt: item.updatedAt,
+      additionalFields: Object.keys(additionalFields) // Return info about what additional fields were processed
     });
   } catch (error) {
     console.error("Error saving debrief:", error);

@@ -92,7 +92,7 @@ function generatePassword(length: number = 12): string {
 async function handleCreateUser(body: string | null) {
   try {
     const payload = parseJsonBody(body);
-    const { username } = payload;
+    const { username, ...additionalFields } = payload;
 
     if (!username) {
       return badRequestResponse("Missing required field: username");
@@ -118,8 +118,8 @@ async function handleCreateUser(body: string | null) {
     // Generate password using the specified method
     const password = generatePassword(12);
 
-    // Prepare user attributes
-    const userAttributes = [
+    // Prepare base user attributes
+    const baseUserAttributes = [
       {
         Name: "email",
         Value: email
@@ -129,6 +129,20 @@ async function handleCreateUser(body: string | null) {
         Value: "true"
       }
     ];
+
+    // Add any additional fields as custom attributes
+    const additionalAttributes = Object.entries(additionalFields).map(([key, value]) => ({
+      Name: `custom:${key}`,
+      Value: String(value)
+    }));
+
+    // Combine base and additional attributes
+    const userAttributes = [...baseUserAttributes, ...additionalAttributes];
+
+    // Log what additional fields are being added
+    if (Object.keys(additionalFields).length > 0) {
+      console.log("Adding custom attributes:", Object.keys(additionalFields));
+    }
 
     // Create user in Cognito
     const createUserCommand = new AdminCreateUserCommand({
@@ -157,6 +171,7 @@ async function handleCreateUser(body: string | null) {
       password: password,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      customAttributes: Object.keys(additionalFields) // Return info about what custom attributes were added
     });
   } catch (error) {
     console.error("Error creating user:", error);

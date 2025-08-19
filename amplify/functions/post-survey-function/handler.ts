@@ -86,7 +86,7 @@ async function handleGetSurvey(queryParams: Record<string, string>) {
 async function handleSubmitSurvey(body: string | null) {
   try {
     const payload = parseJsonBody(body);
-    const { userID: userId, answers } = payload;
+    const { userID: userId, answers, ...additionalFields } = payload;
 
     if (!userId || !answers) {
       return badRequestResponse("Missing required fields: userID and answers");
@@ -100,9 +100,15 @@ async function handleSubmitSurvey(body: string | null) {
     // Convert answers to storage format
     const answersForStorage = stringifyNumbers(answers);
 
+    // Prepare base item with required fields
+    const baseItem = {
+      answers: answersForStorage,
+      ...additionalFields // Include any additional fields from payload
+    };
+
     // Prepare item for storage with common fields
     const item = prepareItemForStorage(
-      { answers: answersForStorage },
+      baseItem,
       userId,
       true // Include generated ID
     );
@@ -112,10 +118,20 @@ async function handleSubmitSurvey(body: string | null) {
       item.updatedAt = currentTime;
       // Keep existing createdAt
       item.createdAt = existingItem.createdAt;
+      
+      // Log what additional fields are being updated
+      if (Object.keys(additionalFields).length > 0) {
+        console.log("Updating additional fields:", Object.keys(additionalFields));
+      }
     } else {
       // New record, set both createdAt and updatedAt
       item.createdAt = currentTime;
       item.updatedAt = currentTime;
+      
+      // Log what additional fields are being added
+      if (Object.keys(additionalFields).length > 0) {
+        console.log("Adding new fields:", Object.keys(additionalFields));
+      }
     }
 
     await putItem(POST_SURVEY_TABLE, item, dynamo);
@@ -125,7 +141,8 @@ async function handleSubmitSurvey(body: string | null) {
     return createResponse(HTTP_STATUS.OK, { 
       message: "Post survey submitted successfully",
       createdAt: item.createdAt,
-      updatedAt: item.updatedAt
+      updatedAt: item.updatedAt,
+      additionalFields: Object.keys(additionalFields) // Return info about what additional fields were processed
     });
   } catch (error) {
     console.error("Error submitting survey:", error);
