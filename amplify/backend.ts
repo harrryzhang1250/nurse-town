@@ -6,14 +6,17 @@ import {
   LambdaIntegration,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
+import { CognitoIdentityProviderClient, ListUserPoolClientsCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { preSurveyFunction } from "./functions/pre-survey-function/resource";
 import { postSurveyFunction } from "./functions/post-survey-function/resource";
 import { chatHistoryFunction } from "./functions/chat-history-function/resource";
 import { debriefFunction } from "./functions/debrief-function/resource";
 import { cognitoUserFunction } from "./functions/cognito-user-function/resource";
+import { authFunction } from "./functions/auth-function/resource";
 import { auth } from "./auth/resource";
 import { data } from "./data/resource";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { UserPoolClient } from "aws-cdk-lib/aws-cognito";
 
 const backend = defineBackend({
   auth,
@@ -23,6 +26,7 @@ const backend = defineBackend({
   chatHistoryFunction,
   debriefFunction,
   cognitoUserFunction,
+  authFunction,
 });
 
 // Function wrapper list
@@ -54,6 +58,33 @@ backend.cognitoUserFunction.addEnvironment("USER_POOL_ID", userPoolId);
 backend.cognitoUserFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     actions: ["cognito-idp:AdminCreateUser", "cognito-idp:AdminGetUser", "cognito-idp:AdminSetUserPassword"],
+    resources: [userPool.userPoolArn],
+  })
+);
+
+// Grant Cognito permissions to auth-function and add environment variables
+backend.authFunction.addEnvironment("USER_POOL_ID", userPoolId);
+
+// Create App Client with USER_PASSWORD_AUTH enabled
+const appClient = new UserPoolClient(userPool, "AuthAppClient", {
+  userPool: userPool,
+  userPoolClientName: "auth-app-client",
+  generateSecret: false, // No client secret needed for public clients
+  authFlows: {
+    userPassword: true, // Enable USER_PASSWORD_AUTH
+    userSrp: false,
+    adminUserPassword: false,
+    custom: false,
+  },
+  // Remove OAuth configuration since we don't need it for USER_PASSWORD_AUTH
+});
+
+// Set CLIENT_ID environment variable
+backend.authFunction.addEnvironment("CLIENT_ID", appClient.userPoolClientId);
+
+backend.authFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    actions: ["cognito-idp:InitiateAuth", "cognito-idp:AdminGetUser", "cognito-idp:ListUserPoolClients"],
     resources: [userPool.userPoolArn],
   })
 );
@@ -94,6 +125,10 @@ const debriefLambdaIntegration = new LambdaIntegration(
 
 const cognitoUserLambdaIntegration = new LambdaIntegration(
   backend.cognitoUserFunction.resources.lambda
+);
+
+const authLambdaIntegration = new LambdaIntegration(
+  backend.authFunction.resources.lambda
 );
 
 // create a new resource path with no authorization for pre-survey
@@ -138,6 +173,15 @@ cognitoUserPath.addMethod("GET", cognitoUserLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 cognitoUserPath.addMethod("POST", cognitoUserLambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+});
+
+// create a new resource path with no authorization for auth
+const authPath = myRestApi.root.addResource("auth");
+authPath.addResource("login").addMethod("POST", authLambdaIntegration, {
+  authorizationType: AuthorizationType.NONE,
+});
+authPath.addResource("signout").addMethod("POST", authLambdaIntegration, {
   authorizationType: AuthorizationType.NONE,
 });
 
