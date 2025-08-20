@@ -1,17 +1,19 @@
 import React from 'react';
-import { Box, Text, Paper, Stack, Center, Button } from '@mantine/core';
+import { Box, Text, Paper, Stack, Center, Button, Loader } from '@mantine/core';
 
 interface SimulationTemplateProps {
   level: number;
   isCompleted: boolean;
   onComplete: () => void;
   children?: React.ReactNode;
+  loading?: boolean;
 }
 
 export default function SimulationTemplate({ 
   level, 
   onComplete, 
-  children
+  children,
+  loading = false
 }: SimulationTemplateProps) {
   const containerStyle = {
     width: '100%',
@@ -69,23 +71,15 @@ export default function SimulationTemplate({
   };
 
   const getSimulationGuideButtonText = (level: number): string => {
+    if (loading) {
+      return 'Checking Simulation...';
+    }
     return `Complete Level ${level} Simulation`;
   };
 
-  const getSimulationGuideButtonStyle = () => ({
-    backgroundColor: '#cd853f',
-    border: 'none',
-    fontSize: '18px',
-    fontWeight: 600,
-    padding: '16px 40px',
-    transition: 'all 0.3s ease',
-    minWidth: '320px',
-    color: 'white',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
-  });
 
   const handleSimulationGuide = () => {
+    if (loading) return;
     // This function will be overridden by the parent component
     onComplete();
   };
@@ -138,16 +132,38 @@ export default function SimulationTemplate({
               <Button
                 onClick={handleSimulationGuide}
                 size="lg"
-                style={getSimulationGuideButtonStyle()}
+                disabled={loading}
+                loading={loading}
+                style={{
+                  backgroundColor: '#cd853f',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  padding: '16px 40px',
+                  transition: 'all 0.3s ease',
+                  minWidth: '320px',
+                  color: 'white',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: 1,
+                  boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)'
+                }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(148, 101, 14, 0.4)';
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#cd853f';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(168, 140, 118, 0.28)';
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
+                  if (!loading) {
+                    e.currentTarget.style.backgroundColor = '#cd853f';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
+                  }
                 }}
               >
+                {loading && <Loader size="sm" color="white" style={{ marginRight: '8px' }} />}
                 {getSimulationGuideButtonText(level)}
               </Button>
             </Stack>

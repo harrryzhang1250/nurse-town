@@ -58,6 +58,7 @@ export default function SimulationLevel({
 
   // State for checklist data
   const [checklistData, setChecklistData] = useState<ChecklistItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Get debrief data from server
   const getDebriefData = async () => {
@@ -100,12 +101,15 @@ export default function SimulationLevel({
       return;
     }
 
+    setIsLoading(true);
     try {
       // Check if simulation data exists in backend
       await getSimulationData(user.username, level);
       dispatch(setSimulationCompleted({ level, completed: true }));
     } catch (error) {
       alert('No simulation data found. Please complete the simulation first.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -150,6 +154,7 @@ export default function SimulationLevel({
           level={level}
           isCompleted={isCompleted}
           onComplete={handleCompleteSimulation}
+          loading={isLoading}
         >
           <div>
             <h3>Level {level} Simulation: {patientType}</h3>

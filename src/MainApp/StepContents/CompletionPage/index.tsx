@@ -20,9 +20,9 @@ export default function CompletionPage() {
     width: '100%',
     minHeight: '100%',
     background: 'white',
-    padding: '100px 20px 20px',
+    padding: '50px 20px 20px',
     boxSizing: 'border-box' as const,
-    height: 'calc(100vh - 100px)',
+    height: 'calc(100vh - 50px)',
     display: 'flex',
     flexDirection: 'column' as const,
     overflow: 'auto'
@@ -42,7 +42,7 @@ export default function CompletionPage() {
     fontWeight: 'bold',
     color: '#4f46e5',
     letterSpacing: '1.5px',
-    marginBottom: '20px',
+    marginBottom: '10px',
     textAlign: 'center' as const
   };
 
@@ -59,7 +59,7 @@ export default function CompletionPage() {
     fontSize: '18px',
     lineHeight: '1.8',
     color: '#4b5563',
-    marginBottom: '20px',
+    marginBottom: '10px',
     textAlign: 'center' as const
   };
 
@@ -74,7 +74,7 @@ export default function CompletionPage() {
     minWidth: '200px',
     color: 'white',
     cursor: 'pointer',
-    marginTop: '20px'
+    marginTop: '10px'
   };
 
   return (
@@ -82,7 +82,7 @@ export default function CompletionPage() {
       <Paper p="xl" radius="lg" style={paperStyle}>
         <Stack gap="xl" align="center">
           {/* Success Icon */}
-          <Center style={{ marginBottom: '20px' }}>
+          <Center>
             <IconCircleCheck 
               size={80} 
               color="#10b981" 

@@ -202,12 +202,6 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
                 {downloadError}
               </Alert>
             )}
-
-            {downloadComplete && (
-              <Alert color="green" title="Download Complete!" style={{ marginTop: '15px' }}>
-                The application has been downloaded successfully. You can now begin the simulation.
-              </Alert>
-            )}
           </Box>
 
           <Box style={highlightBoxStyle}>
