@@ -12,49 +12,49 @@ const defaultChecklistItems: ChecklistItem[] = [
   {
     observedBehavior: 'Limited Verbal Output',
     description: 'Student should recognize reduced speech output and document frequency of verbal responses',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Telegraphic Speech',
     description: 'Student should identify short, incomplete sentences and note communication patterns',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Word-Finding Blocks (Anomia)',
     description: 'Student should observe difficulty finding words and document specific examples',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Perseveration',
     description: 'Student should recognize repetitive responses and note when they occur',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Communication-Related Frustration',
     description: 'Student should identify signs of frustration and document patient reactions',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Reliance on Gestures',
     description: 'Student should observe non-verbal communication and note gesture types used',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Reduced Initiation',
     description: 'Student should recognize lack of spontaneous communication and document interaction patterns',
-    exists: false,
+    completed: false,
     notes: ''
   },
   {
     observedBehavior: 'Inconsistent Yes/No Responses',
     description: 'Student should identify unreliable responses and note specific questions asked',
-    exists: false,
+    completed: false,
     notes: ''
   }
 ];
@@ -75,7 +75,7 @@ export const SimulationChecklist: React.FC<SimulationChecklistProps> = ({
       // Merge initialData with defaultChecklistItems to ensure all fields are present
       const mergedData = initialData.map((item, index) => ({
         ...defaultChecklistItems[index], // Include all default fields including expectedResponse
-        ...item // Override with actual data (exists, notes)
+        ...item // Override with actual data (completed, notes)
       }));
       setChecklistItems(mergedData);
     } else {
@@ -86,7 +86,7 @@ export const SimulationChecklist: React.FC<SimulationChecklistProps> = ({
   const handleCheckboxChange = (index: number, checked: boolean) => {
     setChecklistItems(prev => 
       prev.map((item, i) => 
-        i === index ? { ...item, exists: checked } : item
+        i === index ? { ...item, completed: checked } : item
       )
     );
   };
@@ -102,10 +102,10 @@ export const SimulationChecklist: React.FC<SimulationChecklistProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Only submit necessary fields (exists and notes), exclude expectedResponse
-      const submitData = checklistItems.map(({ observedBehavior, exists, notes }) => ({
+      // Only submit necessary fields (completed and notes), exclude expectedResponse
+      const submitData = checklistItems.map(({ observedBehavior, completed, notes }) => ({
         observedBehavior,
-        exists,
+        completed,
         notes
       }));
       await onSubmit(submitData);
@@ -170,7 +170,7 @@ export const SimulationChecklist: React.FC<SimulationChecklistProps> = ({
                      Description
                    </Box>
                    <Box style={{ fontWeight: 'bold', color: '#495057', fontSize: '20px', textAlign: 'center' }}>
-                     Exists
+                     Completed
                    </Box>
                    <Box style={{ fontWeight: 'bold', color: '#495057', fontSize: '20px', textAlign: 'center' }}>
                      Notes
@@ -219,7 +219,7 @@ export const SimulationChecklist: React.FC<SimulationChecklistProps> = ({
                          }}
                        >
                          <Checkbox
-                           checked={item.exists}
+                           checked={item.completed}
                            onChange={(event) => handleCheckboxChange(index, event.currentTarget.checked)}
                            size="lg"
                            color="green"

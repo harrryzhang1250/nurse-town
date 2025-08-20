@@ -7,6 +7,7 @@ import SimulationTemplate from './SimulationTemplate';
 import { completeStep, selectIsStepCompleted, setSimulationCompleted, selectSimulationCompleted, type ChecklistItem } from '../reducer';
 import type { RootState } from '../store';
 import { SimulationChecklist } from './SimulationChecklist';
+import { getSimulationData } from './simulationClient';
 
 interface SimulationLevelProps {
   level: number;
@@ -94,11 +95,18 @@ export default function SimulationLevel({
   }, [isCompleted, level, dispatch]);
 
   const handleCompleteSimulation = async () => {
-    // Directly proceed to checklist - no need to check simulation data
-    console.log('SimulationLevel - handleCompleteSimulation called, checklistData:', checklistData);
-    
-    // Dispatch the action for current level
-    dispatch(setSimulationCompleted({ level, completed: true }));
+    if (!user?.username) {
+      console.error('User not authenticated');
+      return;
+    }
+
+    try {
+      // Check if simulation data exists in backend
+      await getSimulationData(user.username, level);
+      dispatch(setSimulationCompleted({ level, completed: true }));
+    } catch (error) {
+      alert('No simulation data found. Please complete the simulation first.');
+    }
   };
 
   const handleChecklistSubmit = async (checklistItems: ChecklistItem[]) => {

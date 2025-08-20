@@ -45,7 +45,7 @@ export default function SimulationTemplate({
     fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
     fontWeight: 600,
     color: '#374151',
-    marginBottom: '16px'
+    marginBottom: '8px'
   };
 
   const bodyTextStyle = {
@@ -93,9 +93,9 @@ export default function SimulationTemplate({
   return (
     <Box style={containerStyle}>
       <Paper radius="lg" style={paperStyle}>
-        <Stack gap="lg">
+        <Stack gap="md">
           {/* Title Section */}
-          <Center style={{ marginBottom: '40px' }}>
+          <Center>
             <Box ta="center">
               <Text style={titleStyle}>
                 Level {level} Simulation
