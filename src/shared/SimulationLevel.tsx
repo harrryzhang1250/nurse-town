@@ -4,14 +4,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { updateUserAttributes } from 'aws-amplify/auth';
 import SimulationTemplate from './SimulationTemplate';
-import SurveyContent from './SurveyContent';
-import { completeStep, selectIsStepCompleted, type SurveyResponse } from '../reducer';
+import { completeStep, selectIsStepCompleted, setSimulationCompleted, selectSimulationCompleted, type ChecklistItem } from '../reducer';
 import type { RootState } from '../store';
-import { getSimulationData } from './simulationClient';
+import { SimulationChecklist } from './SimulationChecklist';
 
 interface SimulationLevelProps {
   level: number;
-  setLevelSimulation: (data: SurveyResponse) => { type: string; payload: SurveyResponse };
+  setLevelSimulation: (data: ChecklistItem[]) => { type: string; payload: ChecklistItem[] };
   getDebrief: (userID: string) => Promise<any>;
   submitDebrief: (data: any) => Promise<any>;
   nextStep: string;
@@ -53,17 +52,11 @@ export default function SimulationLevel({
     }
   });
   
-  // State to track if simulation is completed (has chat history)
-  const [simulationCompleted, setSimulationCompleted] = useState(false);
+  // Get simulation completed state from Redux for current level
+  const simulationCompleted = useSelector((state: RootState) => selectSimulationCompleted(level)(state));
 
-  // State for survey responses
-  const [surveyResponses, setSurveyResponses] = useState<SurveyResponse>({
-    'This session improved my confidence in interviewing clients with expressive aphasia.': null,
-    'I felt the patient\'s responses were realistic.': null,
-    'I was able to navigate the interaction easily.': null,
-    'This session was educational and helped me practice useful skills.': null,
-    'Open-ended: What was the most helpful part of this session?': ''
-  });
+  // State for checklist data
+  const [checklistData, setChecklistData] = useState<ChecklistItem[]>([]);
 
   // Get debrief data from server
   const getDebriefData = async () => {
@@ -72,22 +65,20 @@ export default function SimulationLevel({
     try {
       const debrief = await getDebrief(user.username) as any;
       if (debrief?.answers) {
-        // Backend now handles number conversion, so we can use the data directly
-        const debriefData = debrief.answers;
-        setSurveyResponses(debriefData);
+        setChecklistData(debrief.answers);
         // Save to Redux store
-        dispatch(setLevelSimulation(debriefData));
+        dispatch(setLevelSimulation(debrief.answers));
       }
     } catch (error) {
-      // 忽略获取错误
+      // Ignore fetch errors
     }
   };
 
   // Load data from Redux if available, otherwise fetch from server
   useEffect(() => {
-    if (levelSimulationFromRedux) {
+    if (levelSimulationFromRedux && Array.isArray(levelSimulationFromRedux)) {
       // Use data from Redux store
-      setSurveyResponses(levelSimulationFromRedux);
+      setChecklistData(levelSimulationFromRedux);
     } else {
       // Fetch from server and save to Redux
       getDebriefData();
@@ -97,47 +88,31 @@ export default function SimulationLevel({
   // Auto-set simulationCompleted to true if step is already completed
   useEffect(() => {
     if (isCompleted) {
-      setSimulationCompleted(true);
+      // Dispatch the action for current level
+      dispatch(setSimulationCompleted({ level, completed: true }));
     }
-  }, [isCompleted]);
-
-
+  }, [isCompleted, level, dispatch]);
 
   const handleCompleteSimulation = async () => {
-    if (!user?.username) {
-      console.error('User not authenticated');
-      return;
-    }
-  
-    try {
-      // Check if simulation data exists in backend
-      const simulationData = await getSimulationData(user.username, level);
-      
-      if (simulationData && typeof simulationData === 'object' && 'chatHistory' in simulationData && simulationData.chatHistory) {
-        // Simulation data exists, proceed to survey
-        setSimulationCompleted(true);
-      } else {
-        // No simulation data found
-        alert('No simulation data found. Please complete the simulation first.');
-      }
-    } catch (error: any) {
-      console.error('Error checking simulation completion:', error);
-      alert('No simulation data found. Please complete the simulation first.');
-    }
+    // Directly proceed to checklist - no need to check simulation data
+    console.log('SimulationLevel - handleCompleteSimulation called, checklistData:', checklistData);
+    
+    // Dispatch the action for current level
+    dispatch(setSimulationCompleted({ level, completed: true }));
   };
 
-  const handleSubmit = async () => {
+  const handleChecklistSubmit = async (checklistItems: ChecklistItem[]) => {
     if (!user?.username) {
       console.error('User not authenticated');
       return;
     }
 
     try {
-      // Submit debrief data to backend
+      // Submit checklist data to backend
       const submissionData = {
         userID: user.username,
         simulationLevel: level,
-        answers: surveyResponses,
+        answers: checklistItems,
       };
       await submitDebrief(submissionData);
       
@@ -149,20 +124,20 @@ export default function SimulationLevel({
       });
       
       // Save to Redux store after successful submission
-      dispatch(setLevelSimulation(surveyResponses));
+      dispatch(setLevelSimulation(checklistItems));
       dispatch(completeStep(`/level-${level}-simulation`));
       
       // Navigate to the next step
       navigate(nextStep);
     } catch (error) {
-      console.error(`Error submitting Level ${level} Simulation:`, error);
+      console.error(`Error submitting Level ${level} Simulation Checklist:`, error);
     }
   };
 
   return (
     <div style={{ padding: '50px 20px 20px', minHeight: '100vh', backgroundColor: 'white' }}>
       {!simulationCompleted ? (
-        // Show simulation template with dynamic button state
+        // Show simulation template
         <SimulationTemplate
           level={level}
           isCompleted={isCompleted}
@@ -175,42 +150,10 @@ export default function SimulationLevel({
           </div>
         </SimulationTemplate>
       ) : (
-        // If simulation is completed, show the survey feedback
-        <SurveyContent
-          responses={surveyResponses}
-          questions={[
-            {
-              field: 'This session improved my confidence in interviewing clients with expressive aphasia.',
-              text: 'This session improved my confidence in interviewing clients with expressive aphasia.'
-            },
-            {
-              field: 'I felt the patient\'s responses were realistic.',
-              text: 'I felt the patient\'s responses were realistic.'
-            },
-            {
-              field: 'I was able to navigate the interaction easily.',
-              text: 'I was able to navigate the interaction easily.'
-            },
-            {
-              field: 'This session was educational and helped me practice useful skills.',
-              text: 'This session was educational and helped me practice useful skills.'
-            }
-          ]}
-          singleOpenEndedQuestion={{
-            field: 'Open-ended: What was the most helpful part of this session?',
-            text: 'Open-ended: What was the most helpful part of this session?'
-          }}
+        <SimulationChecklist
           isCompleted={isCompleted}
-          onRatingChange={(field, value) => setSurveyResponses({ ...surveyResponses, [field]: value })}
-          onTextChange={(field, value) => setSurveyResponses({ ...surveyResponses, [field]: value })}
-          onSubmit={handleSubmit}
-          title={`Level ${level} Simulation Feedback`}
-          ratingScale={{
-            min: 1,
-            max: 6,
-            leftLabel: 'Strongly disagree',
-            rightLabel: 'Strongly agree'
-          }}
+          initialData={checklistData}
+          onSubmit={handleChecklistSubmit}
         />
       )}
     </div>

@@ -6,6 +6,9 @@ export interface SurveyResponse {
   [key: string]: number | null | string;
 }
 
+// Define the interface for checklist items - using any for flexibility
+export type ChecklistItem = any;
+
 // Define the interface for each step
 export interface Step {
   path: string;
@@ -21,9 +24,10 @@ interface UserStepState {
   currentStep: string | null; // Add currentStep for rendering
   preSurvey: SurveyResponse | null;
   postSurvey: SurveyResponse | null;
-  level1Simulation: SurveyResponse | null;
-  level2Simulation: SurveyResponse | null;
-  level3Simulation: SurveyResponse | null;
+  level1Simulation: ChecklistItem[] | null;
+  level2Simulation: ChecklistItem[] | null;
+  level3Simulation: ChecklistItem[] | null;
+  simulationCompleted: Record<number, boolean>; // Track simulation completed state for each level
 }
 
 // Define the main state interface that stores data per user
@@ -54,6 +58,7 @@ const createInitialUserState = (): UserStepState => ({
   level1Simulation: null,
   level2Simulation: null, // Initialize level2Simulation
   level3Simulation: null, // Initialize level3Simulation
+  simulationCompleted: { 1: false, 2: false, 3: false }, // Initialize simulation completed state for all levels
 });
 
 // Helper function to get step index
@@ -188,7 +193,7 @@ const stepSlice = createSlice({
     },
 
     // Set level 1 simulation data for current user
-    setLevel1Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+    setLevel1Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
@@ -197,7 +202,7 @@ const stepSlice = createSlice({
     },
 
     // Set level 2 simulation data for current user
-    setLevel2Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+    setLevel2Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
@@ -206,12 +211,22 @@ const stepSlice = createSlice({
     },
 
     // Set level 3 simulation data for current user
-    setLevel3Simulation: (state, action: PayloadAction<SurveyResponse>) => {
+    setLevel3Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
       state.userStates[currentUserId].level3Simulation = action.payload;
+    },
+
+    // Set simulation completed state for a specific level
+    setSimulationCompleted: (state, action: PayloadAction<{ level: number; completed: boolean }>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      const { level, completed } = action.payload;
+      state.userStates[currentUserId].simulationCompleted[level] = completed;
     },
   },
 });
@@ -226,7 +241,8 @@ export const {
   setPostSurvey,
   setLevel1Simulation,
   setLevel2Simulation,
-  setLevel3Simulation // Added setLevel3Simulation
+  setLevel3Simulation, // Added setLevel3Simulation
+  setSimulationCompleted // Added setSimulationCompleted
 } = stepSlice.actions;
 
 // Base selectors
@@ -303,6 +319,14 @@ export const selectPreSurvey = createSelector(
   [selectCurrentUserState],
   (userState): SurveyResponse | null => {
     return userState ? userState.preSurvey : null;
+  }
+);
+
+// Simulation completed selector for a specific level
+export const selectSimulationCompleted = (level: number) => createSelector(
+  [selectCurrentUserState],
+  (userState): boolean => {
+    return userState ? userState.simulationCompleted[level] || false : false;
   }
 );
 
