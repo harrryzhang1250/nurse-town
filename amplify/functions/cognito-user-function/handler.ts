@@ -99,7 +99,7 @@ async function handleCreateUser(body: string | null) {
     }
 
     // Generate email from username
-    const email = `${username}@nursetown.com`;
+    const email = `${username}@voice-sim.org`;
     
     // Check if user already exists
     try {

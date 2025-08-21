@@ -50,6 +50,11 @@ export default function PostSurvey() {
     }
   }, [user?.username, isCompleted, postSurveyFromRedux]);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleRatingChange = (field: string, value: number) => {
     setResponses(prev => ({
       ...prev,

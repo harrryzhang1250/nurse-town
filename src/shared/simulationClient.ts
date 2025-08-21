@@ -18,7 +18,7 @@ export const getDebrief = async (userID: string, simulationLevel: number) => {
   }
 };
 
-// 获取用户的Chat History数据
+// get simulation data
 export const getSimulationData = async (userID: string, simulationLevel: number) => {
   try {
     const restOperation = get({
@@ -61,7 +61,7 @@ export const submitDebrief = async (submissionData: {
   }
 };
 
-// 提交Chat History数据
+// submit simulation data
 export const submitSimulationData = async (submissionData: any) => {
   try {
     const restOperation = post({

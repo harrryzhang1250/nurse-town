@@ -6,9 +6,6 @@ export interface SurveyResponse {
   [key: string]: number | null | string;
 }
 
-// Define the interface for checklist items - using any for flexibility
-export type ChecklistItem = any;
-
 // Define the interface for each step
 export interface Step {
   path: string;
@@ -24,9 +21,12 @@ interface UserStepState {
   currentStep: string | null; // Add currentStep for rendering
   preSurvey: SurveyResponse | null;
   postSurvey: SurveyResponse | null;
-  level1Simulation: ChecklistItem[] | null;
-  level2Simulation: ChecklistItem[] | null;
-  level3Simulation: ChecklistItem[] | null;
+  level1Debrief: any | null;
+  level2Debrief: any | null;
+  level3Debrief: any | null;
+  level1SimulationData: any | null; // Store simulation data from DB for level 1
+  level2SimulationData: any | null; // Store simulation data from DB for level 2
+  level3SimulationData: any | null; // Store simulation data from DB for level 3
   simulationCompleted: Record<number, boolean>; // Track simulation completed state for each level
 }
 
@@ -55,9 +55,12 @@ const createInitialUserState = (): UserStepState => ({
   currentStep: "/informed-consent", // Start with first step
   preSurvey: null,
   postSurvey: null,
-  level1Simulation: null,
-  level2Simulation: null, // Initialize level2Simulation
-  level3Simulation: null, // Initialize level3Simulation
+  level1Debrief: null,
+  level2Debrief: null,
+  level3Debrief: null,
+  level1SimulationData: null, // Initialize level1SimulationData
+  level2SimulationData: null, // Initialize level2SimulationData
+  level3SimulationData: null, // Initialize level3SimulationData
   simulationCompleted: { 1: false, 2: false, 3: false }, // Initialize simulation completed state for all levels
 });
 
@@ -192,31 +195,58 @@ const stepSlice = createSlice({
       state.userStates[currentUserId].postSurvey = action.payload;
     },
 
-    // Set level 1 simulation data for current user
-    setLevel1Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
+    // Set level 1 debrief data for current user
+    setLevel1Debrief: (state, action: PayloadAction<any>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
-      state.userStates[currentUserId].level1Simulation = action.payload;
+      state.userStates[currentUserId].level1Debrief = action.payload;
     },
 
-    // Set level 2 simulation data for current user
-    setLevel2Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
+    // Set level 2 debrief data for current user
+    setLevel2Debrief: (state, action: PayloadAction<any>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
-      state.userStates[currentUserId].level2Simulation = action.payload;
+      state.userStates[currentUserId].level2Debrief = action.payload;
     },
 
-    // Set level 3 simulation data for current user
-    setLevel3Simulation: (state, action: PayloadAction<ChecklistItem[]>) => {
+    // Set level 3 debrief data for current user
+    setLevel3Debrief: (state, action: PayloadAction<any>) => {
       const currentUserId = state.currentUserId;
       
       if (!currentUserId || !state.userStates[currentUserId]) return;
       
-      state.userStates[currentUserId].level3Simulation = action.payload;
+      state.userStates[currentUserId].level3Debrief = action.payload;
+    },
+
+    // Set level 1 simulation data from DB for current user
+    setLevel1SimulationData: (state, action: PayloadAction<any>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level1SimulationData = action.payload;
+    },
+
+    // Set level 2 simulation data from DB for current user
+    setLevel2SimulationData: (state, action: PayloadAction<any>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level2SimulationData = action.payload;
+    },
+
+    // Set level 3 simulation data from DB for current user
+    setLevel3SimulationData: (state, action: PayloadAction<any>) => {
+      const currentUserId = state.currentUserId;
+      
+      if (!currentUserId || !state.userStates[currentUserId]) return;
+      
+      state.userStates[currentUserId].level3SimulationData = action.payload;
     },
 
     // Set simulation completed state for a specific level
@@ -239,10 +269,13 @@ export const {
   setCurrentCompletedStep, 
   setPreSurvey,
   setPostSurvey,
-  setLevel1Simulation,
-  setLevel2Simulation,
-  setLevel3Simulation, // Added setLevel3Simulation
-  setSimulationCompleted // Added setSimulationCompleted
+  setLevel1Debrief,
+  setLevel2Debrief,
+  setLevel3Debrief, // Added setLevel3Simulation
+  setSimulationCompleted, // Added setSimulationCompleted
+  setLevel1SimulationData, // Added setLevel1SimulationData
+  setLevel2SimulationData, // Added setLevel2SimulationData
+  setLevel3SimulationData // Added setLevel3SimulationData
 } = stepSlice.actions;
 
 // Base selectors
@@ -349,6 +382,28 @@ export const selectHasPostSurvey = createSelector(
   [selectPostSurvey],
   (postSurvey): boolean => {
     return postSurvey !== null;
+  }
+);
+
+// Level-specific simulation data selectors
+export const selectLevel1SimulationData = createSelector(
+  [selectCurrentUserState],
+  (userState): any => {
+    return userState ? userState.level1SimulationData : null;
+  }
+);
+
+export const selectLevel2SimulationData = createSelector(
+  [selectCurrentUserState],
+  (userState): any => {
+    return userState ? userState.level2SimulationData : null;
+  }
+);
+
+export const selectLevel3SimulationData = createSelector(
+  [selectCurrentUserState],
+  (userState): any => {
+    return userState ? userState.level3SimulationData : null;
   }
 );
 

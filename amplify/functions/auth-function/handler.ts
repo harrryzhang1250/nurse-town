@@ -118,6 +118,7 @@ async function handleLogin(body: string | null) {
           simulationLevel = 3;
           break;
         case "level-3-simulation":
+        case "post-survey":
           canLogin = false;
           errorMessage = "You have completed all simulations. Please head to post survey.";
           break;
@@ -128,8 +129,6 @@ async function handleLogin(body: string | null) {
       if (!canLogin) {
         return createResponse(HTTP_STATUS.FORBIDDEN, {
           error: errorMessage,
-          currentStep: currentStep,
-          simulationLevel: null
         });
       }
 

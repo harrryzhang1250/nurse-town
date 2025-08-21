@@ -128,7 +128,7 @@ export default function PreSurvey() {
     <Box
       style={{
         paddingTop: '50px', // Account for TopBar
-        minHeight: '100vh',
+        height: 'calc(100vh - 100px)',
         background: 'white',
         boxSizing: 'border-box',
         overflow: 'auto',

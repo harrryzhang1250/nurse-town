@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { updateUserAttributes } from 'aws-amplify/auth';
 import SimulationTemplate from './SimulationTemplate';
-import { completeStep, selectIsStepCompleted, setSimulationCompleted, selectSimulationCompleted, type ChecklistItem } from '../reducer';
+import { completeStep, selectIsStepCompleted, setSimulationCompleted, selectSimulationCompleted} from '../reducer';
+import { getDebrief, getSimulationData, submitDebrief } from './simulationClient';
 import type { RootState } from '../store';
-import { SimulationChecklist } from './SimulationChecklist';
-import { getSimulationData } from './simulationClient';
+import { SelfReflection } from './SelfReflection';
+import EvaluationResult from './EvaluationResult';
 
 interface SimulationLevelProps {
   level: number;
-  setLevelSimulation: (data: ChecklistItem[]) => { type: string; payload: ChecklistItem[] };
-  getDebrief: (userID: string) => Promise<any>;
-  submitDebrief: (data: any) => Promise<any>;
+  setLevelDebrief: (data: any[] | {
+    checklistItems: any[];
+    midSurveyResponses: any;
+  }) => { type: string; payload: any };
+  setLevelSimulationData: (data: any) => { type: string; payload: any };
+  // getSimulationData: (userID: string, level: number) => Promise<any>;
+  // getDebrief: (userID: string, level: number) => Promise<any>;
+  // submitDebrief: (data: any) => Promise<any>;
   nextStep: string;
   patientType: string;
   description: string;
@@ -21,9 +27,11 @@ interface SimulationLevelProps {
 
 export default function SimulationLevel({
   level,
-  setLevelSimulation,
-  getDebrief,
-  submitDebrief,
+  setLevelDebrief,
+  setLevelSimulationData,
+  // getSimulationData,
+  // getDebrief,
+  // submitDebrief,
   nextStep,
   patientType,
   description
@@ -36,56 +44,67 @@ export default function SimulationLevel({
   const isCompleted = useSelector((state: RootState) => 
     selectIsStepCompleted(`/level-${level}-simulation`)(state)
   );
-  
-  // Get level simulation data from Redux store
-  const levelSimulationFromRedux = useSelector((state: RootState) => {
-    const currentUserId = state.steps.currentUserId;
-    if (!currentUserId) return null;
-    
-    const userState = state.steps.userStates[currentUserId];
-    if (!userState) return null;
-    
-    switch (level) {
-      case 1: return userState.level1Simulation;
-      case 2: return userState.level2Simulation;
-      case 3: return userState.level3Simulation;
-      default: return null;
-    }
-  });
-  
+
   // Get simulation completed state from Redux for current level
   const simulationCompleted = useSelector((state: RootState) => selectSimulationCompleted(level)(state));
 
   // State for checklist data
-  const [checklistData, setChecklistData] = useState<ChecklistItem[]>([]);
+  const [checklistData, setChecklistData] = useState<any[]>([]);
+  const [midSurveyResponses, setMidSurveyResponses] = useState({
+    'This session improved my confidence in interviewing clients with expressive aphasia': null as number | null,
+    'I felt the patient\'s responses were realistic': null as number | null,
+    'I was able to navigate the interaction easily': null as number | null,
+    'This session was educational and helped me practice useful skills': null as number | null,
+    'Which behaviors were most challenging for you to respond to, and why?': '',
+    'What communication strategies seemed to help the patient most?': '',
+    'If you could redo one moment in the simulation, what would you change?': '',
+    'How will you apply what you learned in a real clinical setting?': '',
+    'What was the most helpful part of this session?': ''
+  });
+  // State for evaluation data
+  const [evaluationData, setEvaluationData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const hasFetchedData = useRef(false);
 
   // Get debrief data from server
   const getDebriefData = async () => {
     if (!user?.username) return;
-    
-    try {
-      const debrief = await getDebrief(user.username) as any;
+    const debrief = await getDebrief(user.username, level) as any;
       if (debrief?.answers) {
-        setChecklistData(debrief.answers);
-        // Save to Redux store
-        dispatch(setLevelSimulation(debrief.answers));
+        setChecklistData(debrief.answers.checklistItems);
+        setMidSurveyResponses(debrief.answers.midSurveyResponses);
+        // Only dispatch if we haven't already stored this data
+        if (!hasFetchedData.current) {
+          dispatch(setLevelDebrief(debrief.answers));
+        }
       }
-    } catch (error) {
-      // Ignore fetch errors
+  };
+
+  // get simulation data from server
+  const fetchSimulationData = async () => {
+    if (!user?.username) return;
+    const simulationData = await getSimulationData(user.username, level) as any;
+    if (simulationData?.report) {
+      setEvaluationData(simulationData.report);
+      // Only dispatch if we haven't already stored this data
+      if (!hasFetchedData.current) {
+        dispatch(setLevelSimulationData(simulationData));
+      }
     }
   };
 
-  // Load data from Redux if available, otherwise fetch from server
+  // Fetch data from server only once when component mounts
   useEffect(() => {
-    if (levelSimulationFromRedux && Array.isArray(levelSimulationFromRedux)) {
-      // Use data from Redux store
-      setChecklistData(levelSimulationFromRedux);
-    } else {
-      // Fetch from server and save to Redux
-      getDebriefData();
-    }
-  }, [user?.username, isCompleted, levelSimulationFromRedux]);
+    const fetchInitialData = async () => {
+      if (user?.username && !hasFetchedData.current) {
+        hasFetchedData.current = true;
+        await getDebriefData();
+        await fetchSimulationData();
+      }
+    };
+    
+    fetchInitialData();
+  }, [user?.username]);
 
   // Auto-set simulationCompleted to true if step is already completed
   useEffect(() => {
@@ -104,7 +123,14 @@ export default function SimulationLevel({
     setIsLoading(true);
     try {
       // Check if simulation data exists in backend
-      await getSimulationData(user.username, level);
+      const simulationData = await getSimulationData(user.username, level);
+      // Set evaluation data if report exists
+      if (simulationData && (simulationData as any).report) {
+        setEvaluationData((simulationData as any).report);
+      }
+      
+      // Store simulation data in Redux
+      dispatch(setLevelSimulationData(simulationData));
       dispatch(setSimulationCompleted({ level, completed: true }));
     } catch (error) {
       alert('No simulation data found. Please complete the simulation first.');
@@ -113,20 +139,37 @@ export default function SimulationLevel({
     }
   };
 
-  const handleChecklistSubmit = async (checklistItems: ChecklistItem[]) => {
+  const handleSelfReflectionSubmit = async (data: any) => {
     if (!user?.username) {
       console.error('User not authenticated');
       return;
     }
 
     try {
-      // Submit checklist data to backend
+      // Handle new data format with both checklist and mid-survey responses
+      const checklistData = data.checklistItems;
+      const midSurveyData = data.midSurveyResponses;
+
+      // Submit checklist data and mid-survey data to backend
       const submissionData = {
         userID: user.username,
         simulationLevel: level,
-        answers: checklistItems,
+        answers: {
+          checklistItems: checklistData,
+          midSurveyResponses: midSurveyData  // 使用从SelfReflection传过来的数据
+        }
       };
       await submitDebrief(submissionData);
+      
+      // Save to Redux store after successful submission
+      // Store both checklist and mid-survey data in Redux
+      const combinedData = {
+        checklistItems: checklistData,
+        midSurveyResponses: midSurveyData  // 使用从SelfReflection传过来的数据
+      };
+      
+      // Use the setLevelSimulation prop passed from the parent component
+      dispatch(setLevelDebrief(combinedData));
       
       // Update the current completed step in Cognito
       await updateUserAttributes({
@@ -135,8 +178,7 @@ export default function SimulationLevel({
         }
       });
       
-      // Save to Redux store after successful submission
-      dispatch(setLevelSimulation(checklistItems));
+      // Complete the step and navigate to next step
       dispatch(completeStep(`/level-${level}-simulation`));
       
       // Navigate to the next step
@@ -147,7 +189,11 @@ export default function SimulationLevel({
   };
 
   return (
-    <div style={{ padding: '50px 20px 20px', minHeight: '100vh', backgroundColor: 'white' }}>
+    <div style={{ 
+      padding: '20px', 
+      backgroundColor: 'white',
+      minHeight: '100vh'
+    }}>
       {!simulationCompleted ? (
         // Show simulation template
         <SimulationTemplate
@@ -163,11 +209,14 @@ export default function SimulationLevel({
           </div>
         </SimulationTemplate>
       ) : (
-        <SimulationChecklist
+        <>
+        <EvaluationResult evaluationData={evaluationData} />
+        <SelfReflection
           isCompleted={isCompleted}
-          initialData={checklistData}
-          onSubmit={handleChecklistSubmit}
+          initialData={{ checklistItems: checklistData, midSurveyResponses: midSurveyResponses }}
+          onSubmit={handleSelfReflectionSubmit}
         />
+        </>
       )}
     </div>
   );

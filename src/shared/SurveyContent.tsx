@@ -46,6 +46,8 @@ interface SurveyContentProps<T extends BaseSurveyResponse> {
     leftLabel: string;
     rightLabel: string;
   };
+  showSubmitButton?: boolean;
+  showHeader?: boolean;  // 新增：控制是否显示标题和提交按钮
 }
 
 // Helper function to count words
@@ -74,7 +76,9 @@ function SurveyContent<T extends BaseSurveyResponse>({
     max: 5,
     leftLabel: 'Not confident at all',
     rightLabel: 'Extremely confident'
-  }
+  },
+  showSubmitButton = true,
+  showHeader = true
 }: SurveyContentProps<T>) {
   // Calculate form validity internally
   const isFormValid = (): boolean => {
@@ -200,10 +204,10 @@ function SurveyContent<T extends BaseSurveyResponse>({
         padding: '20px 20px 40px 20px',
         boxSizing: 'border-box' as const,
         position: 'relative',
-        height: 'calc(100vh - 100px)',
+        height: 'auto',
         display: 'flex',
         flexDirection: 'column' as const,
-        overflow: 'auto'
+        overflow: 'visible'
       }}
     >
       <Container size="md" style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
@@ -215,25 +219,29 @@ function SurveyContent<T extends BaseSurveyResponse>({
             boxShadow: 'none'
           }}
         >
-          {/* Logo and Title */}
-          <Center style={{ marginBottom: '40px' }}>
-            <Box ta="center">
-              <Box>
-                <Text
-                  fw="bold"
-                  c='#4f46e5'
-                  mb="md"
-                  style={{
-                    fontSize: '36px',
-                    fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
-                    letterSpacing: '1.5px'
-                  }}
-                >
-                  {title}
-                </Text>
-              </Box>
-            </Box>
-          </Center>
+          {showHeader && (
+            <>
+              {/* Logo and Title */}
+              <Center style={{ marginBottom: '40px' }}>
+                <Box ta="center">
+                  <Box>
+                    <Text
+                      fw="bold"
+                      c='#4f46e5'
+                      mb="md"
+                      style={{
+                        fontSize: '36px',
+                        fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif',
+                        letterSpacing: '1.5px'
+                      }}
+                    >
+                      {title}
+                    </Text>
+                  </Box>
+                </Box>
+              </Center>
+            </>
+          )}
 
           <Stack gap="sm" style={{ marginBottom: '40px' }}>
             {/* Rating questions */}
@@ -380,44 +388,47 @@ function SurveyContent<T extends BaseSurveyResponse>({
             )}
           </Stack>
 
-          <Center>
-            <Button
-              onClick={isCompleted ? undefined : onSubmit}
-              size="lg"
-              disabled={isCompleted || !formValid}
-              style={{
-                backgroundColor: isCompleted ? '#9ca3af' : '#4f46e5',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: 600,
-                padding: '16px 60px',
-                transition: 'all 0.3s ease',
-                minWidth: '400px',
-                color: 'white',
-                cursor: isCompleted ? 'default' : (formValid ? 'pointer' : 'not-allowed'),
-                opacity: isCompleted ? 0.8 : (formValid ? 1 : 0.7),
-                marginTop: '40px',
-                marginBottom: '60px'
-              }}
-              onMouseEnter={(e) => {
-                if (!isCompleted && formValid) {
-                  e.currentTarget.style.backgroundColor = '#cd853f';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(168, 140, 118, 0.28)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isCompleted && formValid) {
-                  e.currentTarget.style.backgroundColor = '#4f46e5';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '';
-                }
-              }}
-            >
-              {isCompleted ? 'Completed' : 'Submit Survey'}
-            </Button>
-          </Center>
+          {/* Submit Button */}
+          {showHeader && showSubmitButton && (
+            <Center>
+              <Button
+                onClick={onSubmit}
+                size="lg"
+                disabled={!formValid}
+                style={{
+                  backgroundColor: formValid ? '#4f46e5' : '#9ca3af',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '18px',
+                  fontWeight: 600,
+                  padding: '16px 60px',
+                  transition: 'all 0.3s ease',
+                  minWidth: '400px',
+                  color: 'white',
+                  cursor: formValid ? 'pointer' : 'not-allowed',
+                  opacity: formValid ? 1 : 0.7,
+                  marginTop: '40px',
+                  marginBottom: '60px'
+                }}
+                onMouseEnter={(e) => {
+                  if (formValid) {
+                    e.currentTarget.style.backgroundColor = '#cd853f';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(168, 140, 118, 0.28)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (formValid) {
+                    e.currentTarget.style.backgroundColor = '#4f46e5';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '';
+                  }
+                }}
+              >
+                Submit Survey
+              </Button>
+            </Center>
+          )}
         </Paper>
       </Container>
     </div>

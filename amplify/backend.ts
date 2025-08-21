@@ -91,15 +91,12 @@ backend.authFunction.resources.lambda.addToRolePolicy(
   })
 );
 
-// Configure download URL function for prodtion
-let s3BucketName = "unity-simulation-app";
-
-// Change s3 bucket name for sandbox environments
-if (process.env.AWS_REGION === "us-west-2") {
-  s3BucketName = "unity-simulation-app-us-west-2";
-}
-if (process.env.AWS_REGION === "us-east-2") {
-  s3BucketName = "unity-simulation-app-us-east-2";
+// Configure download URL function for production and sandbox environments
+let s3BucketName;
+if (process.env.AWS_REGION === "us-east-1") {
+  s3BucketName = "unity-simulation-app";
+} else {
+  s3BucketName = `unity-simulation-app-${process.env.AWS_REGION}`;
 }
 
 backend.downloadUrlFunction.addEnvironment("S3_BUCKET_NAME", s3BucketName);
