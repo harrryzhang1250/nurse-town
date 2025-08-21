@@ -206,7 +206,7 @@ export default function PostSurvey() {
   return (
     <Box
       style={{
-        paddingTop: '50px', // Account for TopBar
+        marginTop: '3rem',
         minHeight: '100vh',
         background: 'white',
         boxSizing: 'border-box',

@@ -67,6 +67,7 @@ const EvaluationResult: React.FC<{ evaluationData: EvaluationReportData | null }
   return (
     <Box style={{ 
       maxWidth: '1200px', 
+      margin: '0 auto',
       marginTop: '1.5rem', 
       padding: '20px', 
       backgroundColor: 'white'

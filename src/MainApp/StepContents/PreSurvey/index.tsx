@@ -51,6 +51,11 @@ export default function PreSurvey() {
     }
   }, [user?.username, isCompleted, preSurveyFromRedux]);
 
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleRatingChange = (field: keyof SurveyResponse, value: number) => {
     setResponses(prev => ({
       ...prev,
@@ -127,8 +132,8 @@ export default function PreSurvey() {
   return (
     <Box
       style={{
-        paddingTop: '50px', // Account for TopBar
-        height: 'calc(100vh - 100px)',
+        marginTop: '3rem',
+        minHeight: '100vh',
         background: 'white',
         boxSizing: 'border-box',
         overflow: 'auto',
