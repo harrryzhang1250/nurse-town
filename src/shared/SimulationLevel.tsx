@@ -141,7 +141,7 @@ export default function SimulationLevel({
       dispatch(setLevelSimulationData(simulationData));
       dispatch(setSimulationCompleted({ level, completed: true }));
     } catch (error) {
-      alert('No simulation data found. Please complete the simulation first.');
+      alert('No simulation data found. Please submit the simulation first or refresh the page.');
     } finally {
       setIsLoading(false);
     }
@@ -218,8 +218,9 @@ export default function SimulationLevel({
         </SimulationTemplate>
       ) : (
         <>
-        <EvaluationResult evaluationData={simulationData?.report || null} />
+        <EvaluationResult level={level} patientBackground={patientBackground} evaluationData={simulationData?.report || null} />
         <SelfReflection
+          level={level}
           isCompleted={isCompleted}
           initialData={{ checklistItems: checklistData, midSurveyResponses: midSurveyResponses }}
           onSubmit={handleSelfReflectionSubmit}

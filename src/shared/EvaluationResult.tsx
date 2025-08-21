@@ -16,7 +16,11 @@ interface EvaluationReportData {
   totalScore: number;
 }
 
-const EvaluationResult: React.FC<{ evaluationData: EvaluationReportData | null }> = ({ evaluationData }) => {
+const EvaluationResult: React.FC<{ 
+  evaluationData: EvaluationReportData | null, 
+  level: number, 
+  patientBackground: string 
+}> = ({ evaluationData, level, patientBackground }) => {
   // 如果evaluationData为null，显示loading状态
   if (!evaluationData) {
     return (
@@ -87,21 +91,23 @@ const EvaluationResult: React.FC<{ evaluationData: EvaluationReportData | null }
                 fontWeight: 'bold'
               }}
             >
-              Evaluation Report
+              Level {level} Evaluation Report
             </Title>
-            <Text
-              size="lg"
-              c="dimmed"
-              style={{
-                maxWidth: '800px',
-                margin: '0 auto',
-                lineHeight: '1.6'
-              }}
-            >
-              Comprehensive assessment of student performance across multiple evaluation criteria
-            </Text>
           </Box>
         </Center>
+
+        <Text
+            size="lg"
+            c="dimmed"
+            style={{
+              maxWidth: '1200px',
+              margin: '0 auto',
+              marginBottom: '40px',
+              lineHeight: '1.6'
+            }}
+          >
+            <strong>Patient Background:</strong> {patientBackground}
+          </Text>
 
         {/* 总体评分概览 */}
         <Paper 

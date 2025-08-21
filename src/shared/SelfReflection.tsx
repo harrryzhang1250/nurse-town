@@ -9,6 +9,7 @@ interface SelfReflectionProps {
     midSurveyResponses: any;
   };
   onSubmit: (data: any) => void;
+  level: number;
 }
 
 const defaultChecklistItems = [
@@ -65,7 +66,8 @@ const defaultChecklistItems = [
 export const SelfReflection: React.FC<SelfReflectionProps> = ({
   isCompleted,
   onSubmit,
-  initialData
+  initialData,
+  level
 }) => {
   // Checklist items state
   const [checklistItems, setChecklistItems] = useState<any[]>(
@@ -233,7 +235,7 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
                   letterSpacing: '1.5px'
                 }}
               >
-                Self-Reflection
+                Level {level} Self-Reflection
               </Text>
               <Text
                 size="lg"

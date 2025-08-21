@@ -10,7 +10,6 @@ interface SimulationTutorialContentProps {
 export default function SimulationTutorialContent({ isCompleted, onComplete }: SimulationTutorialContentProps) {
   const [selectedOS, setSelectedOS] = useState<'windows' | 'mac' | ''>('');
   const [isDownloading, setIsDownloading] = useState(false);
-  const [downloadComplete, setDownloadComplete] = useState(false);
   const [downloadError, setDownloadError] = useState<string>('');
 
   const containerStyle = {
@@ -105,8 +104,6 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
       // Trigger download
       downloadClient.triggerDownload(data.downloadUrl, `simulation-${selectedOS}`);
       
-      // Mark download complete
-      setDownloadComplete(true);
       setIsDownloading(false);
     } catch (error) {
       console.error('Download error:', error);
@@ -115,7 +112,7 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
     }
   };
 
-  const canBeginSimulation = downloadComplete;
+  const canBeginSimulation = true; // Allow simulation to begin without download requirement
 
   return (
     <Box style={containerStyle}>

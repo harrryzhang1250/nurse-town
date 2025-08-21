@@ -100,7 +100,7 @@ if (process.env.AWS_REGION === "us-east-1") {
 }
 
 backend.downloadUrlFunction.addEnvironment("S3_BUCKET_NAME", s3BucketName);
-backend.downloadUrlFunction.addEnvironment("APP_NAME", "VOICE.dmg");
+backend.downloadUrlFunction.addEnvironment("APP_NAME", "VOICE.zip");
 backend.downloadUrlFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     actions: ["s3:GetObject"],
