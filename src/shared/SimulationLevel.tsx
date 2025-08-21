@@ -75,6 +75,11 @@ export default function SimulationLevel({
   const [isLoading, setIsLoading] = useState(false);
   const hasFetchedData = useRef(false);
 
+  // Auto-scroll to top when level changes or component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [level]);
+
   // Get debrief data from server
   const getDebriefData = async () => {
     if (!user?.username) return;
