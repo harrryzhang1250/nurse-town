@@ -103,27 +103,27 @@ export default function PreSurvey() {
   const questions = [
     {
       field: 'I feel confident interviewing a client with expressive aphasia' as keyof SurveyResponse,
-      text: 'I feel confident interviewing a client with expressive aphasia'
+      text: '1. I feel confident interviewing a client with expressive aphasia'
     },
     {
       field: 'I feel prepared to modify my language for clients with communication challenges' as keyof SurveyResponse,
-      text: 'I feel prepared to modify my language for clients with communication challenges'
+      text: '2. I feel prepared to modify my language for clients with communication challenges'
     },
     {
       field: 'I can interpret and apply hospital discharge documentation effectively' as keyof SurveyResponse,
-      text: 'I can interpret and apply hospital discharge documentation effectively'
+      text: '3. I can interpret and apply hospital discharge documentation effectively'
     },
     {
       field: 'I know how to show empathy while gathering clinical information' as keyof SurveyResponse,
-      text: 'I know how to show empathy while gathering clinical information'
+      text: '4. I know how to show empathy while gathering clinical information'
     },
     {
       field: 'I feel confident responding to unexpected client behavior during sessions' as keyof SurveyResponse,
-      text: 'I feel confident responding to unexpected client behavior during sessions'
+      text: '5. I feel confident responding to unexpected client behavior during sessions'
     },
     {
       field: 'I believe this simulation will help me build skills I can apply in real clinical settings' as keyof SurveyResponse,
-      text: 'I believe this simulation will help me build skills I can apply in real clinical settings'
+      text: '6. I believe this simulation will help me build skills I can apply in real clinical settings'
     }
   ];
 
@@ -145,7 +145,7 @@ export default function PreSurvey() {
         questions={questions}
         singleOpenEndedQuestion={{
           field: 'What are you hoping to gain from this simulation experience?',
-          text: 'What are you hoping to gain from this simulation experience?'
+          text: '7. What are you hoping to gain from this simulation experience?'
         }}
         isCompleted={isCompleted}
         onRatingChange={handleRatingChange}

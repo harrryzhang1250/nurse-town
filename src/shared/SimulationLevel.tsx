@@ -20,6 +20,7 @@ interface SimulationLevelProps {
   nextStep: string;
   patientType: string;
   description: string;
+  patientBackground: string;
 }
 
 export default function SimulationLevel({
@@ -28,7 +29,8 @@ export default function SimulationLevel({
   setLevelSimulationData,
   nextStep,
   patientType,
-  description
+  description,
+  patientBackground
 }: SimulationLevelProps) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -211,7 +213,7 @@ export default function SimulationLevel({
           <div>
             <h3>Level {level} Simulation: {patientType}</h3>
             <p>{description}</p>
-            <p><strong>Patient Type:</strong> {patientType} - {description}</p>
+            <p><strong>Patient Background:</strong> {patientBackground}</p>
           </div>
         </SimulationTemplate>
       ) : (

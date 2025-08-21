@@ -102,102 +102,102 @@ export default function PostSurvey() {
   const questions = [
     {
       field: 'I feel more confident interviewing a client with expressive aphasia' as keyof SurveyResponse,
-      text: 'I feel more confident interviewing a client with expressive aphasia'
+      text: '1. I feel more confident interviewing a client with expressive aphasia'
     },
     {
       field: 'I feel better prepared to modify my language for clients with communication challenges' as keyof SurveyResponse,
-      text: 'I feel better prepared to modify my language for clients with communication challenges'
+      text: '2. I feel better prepared to modify my language for clients with communication challenges'
     },
     {
       field: 'I can interpret and apply hospital discharge documentation more effectively' as keyof SurveyResponse,
-      text: 'I can interpret and apply hospital discharge documentation more effectively'
+      text: '3. I can interpret and apply hospital discharge documentation more effectively'
     },
     {
       field: 'I know how to show empathy while gathering clinical information' as keyof SurveyResponse,
-      text: 'I know how to show empathy while gathering clinical information'
+      text: '4. I know how to show empathy while gathering clinical information'
     },
     {
       field: 'I feel more confident responding to unexpected client behavior during sessions' as keyof SurveyResponse,
-      text: 'I feel more confident responding to unexpected client behavior during sessions'
+      text: '5. I feel more confident responding to unexpected client behavior during sessions'
     },
     {
       field: 'This simulation helped me build transferable clinical skills' as keyof SurveyResponse,
-      text: 'This simulation helped me build transferable clinical skills'
+      text: '6. This simulation helped me build transferable clinical skills'
     },
     {
       field: 'The simulation layout and environment felt well-designed' as keyof SurveyResponse,
-      text: 'The simulation layout and environment felt well-designed'
+      text: '7. The simulation layout and environment felt well-designed'
     },
     {
       field: 'The interface was easy to navigate' as keyof SurveyResponse,
-      text: 'The interface was easy to navigate'
+      text: '8. The interface was easy to navigate'
     },
     {
       field: "The patient's communication felt authentic for Broca's aphasia" as keyof SurveyResponse,
-      text: "The patient's communication felt authentic for Broca's aphasia"
+      text: "9. The patient's communication felt authentic for Broca's aphasia"
     },
     {
       field: "Facial expressions and gestures matched the patient's condition" as keyof SurveyResponse,
-      text: "Facial expressions and gestures matched the patient's condition"
+      text: "10. Facial expressions and gestures matched the patient's condition"
     },
     {
       field: "The patient's voice and responses felt natural and appropriate" as keyof SurveyResponse,
-      text: "The patient's voice and responses felt natural and appropriate"
+      text: "11. The patient's voice and responses felt natural and appropriate"
     },
     {
       field: 'The system scoring I received accurately reflected my clinical performance' as keyof SurveyResponse,
-      text: 'The system scoring I received accurately reflected my clinical performance'
+      text: '12. The system scoring I received accurately reflected my clinical performance'
     },
     {
       field: 'The feedback helped me identify specific areas for improvement' as keyof SurveyResponse,
-      text: 'The feedback helped me identify specific areas for improvement'
+      text: '13. The feedback helped me identify specific areas for improvement'
     },
     {
       field: 'I would use this platform to practice independently if it were available' as keyof SurveyResponse,
-      text: 'I would use this platform to practice independently if it were available'
+      text: '14. I would use this platform to practice independently if it were available'
     },
     {
       field: 'The platform gives me more chances to interact with standardized patients, which is helpful' as keyof SurveyResponse,
-      text: 'The platform gives me more chances to interact with standardized patients, which is helpful'
+      text: '15. The platform gives me more chances to interact with standardized patients, which is helpful'
     },
     {
       field: 'With this platform, I felt more comfortable practicing without being observed by other people' as keyof SurveyResponse,
-      text: 'With this platform, I felt more comfortable practicing without being observed by other people'
+      text: '16. With this platform, I felt more comfortable practicing without being observed by other people'
     },
     {
       field: 'The simulation allowed me to pause, reflect, and retry without judgment' as keyof SurveyResponse,
-      text: 'The simulation allowed me to pause, reflect, and retry without judgment'
+      text: '17. The simulation allowed me to pause, reflect, and retry without judgment'
     },
     {
       field: 'This platform helped me recognize growth areas I might miss in real-time' as keyof SurveyResponse,
-      text: 'This platform helped me recognize growth areas I might miss in real-time'
+      text: '18. This platform helped me recognize growth areas I might miss in real-time'
     },
     {
       field: 'I would recommend this simulation platform to other students' as keyof SurveyResponse,
-      text: 'I would recommend this simulation platform to other students'
+      text: '19. I would recommend this simulation platform to other students'
     }
   ];
 
   const openEndedQuestions = [
     {
       field: 'What aspects of the simulation felt most helpful?' as keyof SurveyResponse,
-      text: 'What aspects of the simulation felt most helpful?'
+      text: '20. What aspects of the simulation felt most helpful?'
     },
     {
       field: 'What new knowledge or skill did you gain?' as keyof SurveyResponse,
-      text: 'What new knowledge or skill did you gain?'
+      text: '21. What new knowledge or skill did you gain?'
     },
     {
       field: 'What aspects could be improved?' as keyof SurveyResponse,
-      text: 'What aspects could be improved?'
+      text: '22. What aspects could be improved?'
     },
     {
       field: 'Were there any moments where the simulation didn\'t respond as expected? Please explain.' as keyof SurveyResponse,
-      text: 'Were there any moments where the simulation didn\'t respond as expected? Please explain.'
+      text: '23. Were there any moments where the simulation didn\'t respond as expected? Please explain.'
     },
     {
       field: 'What features would make this platform better for future learners?' as keyof SurveyResponse,
-      text: 'What features would make this platform better for future learners?'
+      text: '24. What features would make this platform better for future learners?'
     }
   ];
 

@@ -20,6 +20,7 @@ export default function SimulationTemplate({
     minHeight: '100%',
     background: 'white',
     padding: '30px 20px 20px',
+    marginTop: '50px',
     boxSizing: 'border-box' as const,
     height: 'calc(100vh - 100px)',
     display: 'flex',
@@ -117,10 +118,10 @@ export default function SimulationTemplate({
               Use your User Study Portal username and password to log in to the application.
             </Text>
             
-            <Text style={stepStyle}>Step 2: Complete Simulation and Sign Out</Text>
+            <Text style={stepStyle}>Step 2: Complete Simulation and Close the Application</Text>
             <Text style={stepTextStyle}>
-              Complete all required interactions in the simulation. After finishing, remember to sign out 
-              from the application, then return to this page and click the "Complete Simulation" 
+              Complete all required interactions in the simulation. After finishing, remember to close the 
+              application, then return to this page and click the "Complete Simulation" 
               button to verify your progress and proceed to the feedback survey.
             </Text>
           </Box>
