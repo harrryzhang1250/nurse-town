@@ -17,7 +17,6 @@ interface SimulationLevelProps {
     midSurveyResponses: any;
   }) => { type: string; payload: any };
   setLevelSimulationData: (data: any) => { type: string; payload: any };
-  selectSimulationData: (state: RootState) => any;
   nextStep: string;
   patientType: string;
   description: string;
@@ -27,7 +26,6 @@ export default function SimulationLevel({
   level,
   setLevelDebrief,
   setLevelSimulationData,
-  selectSimulationData,
   nextStep,
   patientType,
   description
