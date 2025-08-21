@@ -32,6 +32,7 @@ const components = {
       <div style={{
         textAlign: 'center',
         marginBottom: '2rem',
+        marginTop: '8rem',
         padding: '1rem'
       }}>
         <h1 style={{
@@ -43,7 +44,7 @@ const components = {
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>
-          Welcome to Nurse Town
+          Welcome to VOICE
         </h1>
       </div>
     );

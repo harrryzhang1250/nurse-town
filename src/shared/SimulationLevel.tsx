@@ -17,9 +17,7 @@ interface SimulationLevelProps {
     midSurveyResponses: any;
   }) => { type: string; payload: any };
   setLevelSimulationData: (data: any) => { type: string; payload: any };
-  // getSimulationData: (userID: string, level: number) => Promise<any>;
-  // getDebrief: (userID: string, level: number) => Promise<any>;
-  // submitDebrief: (data: any) => Promise<any>;
+  selectSimulationData: (state: RootState) => any;
   nextStep: string;
   patientType: string;
   description: string;
@@ -29,9 +27,7 @@ export default function SimulationLevel({
   level,
   setLevelDebrief,
   setLevelSimulationData,
-  // getSimulationData,
-  // getDebrief,
-  // submitDebrief,
+  selectSimulationData,
   nextStep,
   patientType,
   description
@@ -47,6 +43,19 @@ export default function SimulationLevel({
 
   // Get simulation completed state from Redux for current level
   const simulationCompleted = useSelector((state: RootState) => selectSimulationCompleted(level)(state));
+  
+  // Get simulation data based on level
+  const simulationData = useSelector((state: RootState) => {
+    const currentUserId = state.steps.currentUserId;
+    if (!currentUserId || !state.steps.userStates[currentUserId]) return null;
+    
+    switch (level) {
+      case 1: return state.steps.userStates[currentUserId].level1SimulationData;
+      case 2: return state.steps.userStates[currentUserId].level2SimulationData;
+      case 3: return state.steps.userStates[currentUserId].level3SimulationData;
+      default: return null;
+    }
+  });
 
   // State for checklist data
   const [checklistData, setChecklistData] = useState<any[]>([]);
@@ -62,7 +71,7 @@ export default function SimulationLevel({
     'What was the most helpful part of this session?': ''
   });
   // State for evaluation data
-  const [evaluationData, setEvaluationData] = useState<any>(null);
+  // const [evaluationData, setEvaluationData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const hasFetchedData = useRef(false);
 
@@ -85,11 +94,7 @@ export default function SimulationLevel({
     if (!user?.username) return;
     const simulationData = await getSimulationData(user.username, level) as any;
     if (simulationData?.report) {
-      setEvaluationData(simulationData.report);
-      // Only dispatch if we haven't already stored this data
-      if (!hasFetchedData.current) {
-        dispatch(setLevelSimulationData(simulationData));
-      }
+      dispatch(setLevelSimulationData(simulationData));
     }
   };
 
@@ -99,12 +104,15 @@ export default function SimulationLevel({
       if (user?.username && !hasFetchedData.current) {
         hasFetchedData.current = true;
         await getDebriefData();
-        await fetchSimulationData();
+        // Only fetch simulation data if we don't already have evaluationData
+        if (!simulationData) {
+          await fetchSimulationData();
+        }
       }
     };
     
     fetchInitialData();
-  }, [user?.username]);
+  }, [user?.username, level, simulationData, dispatch]);
 
   // Auto-set simulationCompleted to true if step is already completed
   useEffect(() => {
@@ -126,7 +134,7 @@ export default function SimulationLevel({
       const simulationData = await getSimulationData(user.username, level);
       // Set evaluation data if report exists
       if (simulationData && (simulationData as any).report) {
-        setEvaluationData((simulationData as any).report);
+        dispatch(setLevelSimulationData(simulationData));
       }
       
       // Store simulation data in Redux
@@ -210,7 +218,7 @@ export default function SimulationLevel({
         </SimulationTemplate>
       ) : (
         <>
-        <EvaluationResult evaluationData={evaluationData} />
+        <EvaluationResult evaluationData={simulationData?.report || null} />
         <SelfReflection
           isCompleted={isCompleted}
           initialData={{ checklistItems: checklistData, midSurveyResponses: midSurveyResponses }}
