@@ -14,7 +14,7 @@ export default function SimulationTutorialContent({ isCompleted, onComplete }: S
   const [downloadError, setDownloadError] = useState<string>('');
 
   const containerStyle = {
-    paddingTop: '50px',
+    marginTop: '1rem',
     minHeight: '100vh',
     background: 'white',
     padding: '50px 20px 20px',

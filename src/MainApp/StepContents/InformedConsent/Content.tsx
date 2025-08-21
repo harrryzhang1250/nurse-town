@@ -7,10 +7,10 @@ interface InformedConsentContentProps {
 
 export default function InformedConsentContent({ isCompleted, onComplete }: InformedConsentContentProps) {
   const containerStyle = {
-    paddingTop: '50px',
+    marginTop: '2.5rem',
     minHeight: '100vh',
     background: 'white',
-    padding: '50px 20px 20px',
+    padding: '20px',
     boxSizing: 'border-box' as const
   };
 

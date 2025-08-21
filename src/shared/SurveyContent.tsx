@@ -201,6 +201,7 @@ function SurveyContent<T extends BaseSurveyResponse>({
       style={{
         minHeight: '100%',
         background: 'white',
+        marginTop: '1.5rem',
         padding: '20px 20px 40px 20px',
         boxSizing: 'border-box' as const,
         position: 'relative',
