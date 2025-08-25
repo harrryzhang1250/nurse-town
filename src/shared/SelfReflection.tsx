@@ -98,14 +98,17 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
     "2. I felt the patient's responses were realistic",
     "3. I was able to navigate the interaction easily",
     "4. This session was educational and helped me practice useful skills",
+    "5. I feel more confident applying these skills when working with other health professionals.",
+    "6. The simulation encouraged me to reflect on my clinical reasoning during and after the session.",
+    "7. The simulation kept me engaged and motivated to practice new strategies.",
   ];
 
   const openEndedQuestions = [
-    "5. Which behaviors were most challenging for you to respond to, and why?",
-    "6. What communication strategies seemed to help the patient most?",
-    "7. If you could redo one moment in the simulation, what would you change?",
-    "8. How will you apply what you learned in a real clinical setting?",
-    "9. What was the most helpful part of this session?",
+    "8. Which behaviors were most challenging for you to respond to, and why?",
+    "9. What communication strategies seemed to help the patient most?",
+    "10. If you could redo one moment in the simulation, what would you change?",
+    "11. How will you apply what you learned in a real clinical setting?",
+    "12. What was the most helpful part of this session?",
   ];
 
   // Mid-Simulation Survey responses
