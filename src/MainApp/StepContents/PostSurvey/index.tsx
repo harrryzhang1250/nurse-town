@@ -194,6 +194,14 @@ export default function PostSurvey() {
     {
       field: 'What features would make this platform better for future learners?' as keyof SurveyResponse,
       text: '24. What features would make this platform better for future learners?'
+    },
+    {
+      filed: 'What limitations do you think virtual patients have? For example, showing real emotions, giving authentic answers, or sounding natural.' as keyof SurveyResponse,
+      text: '25. What limitations do you think virtual patients have? For example, showing real emotions, giving authentic answers, or sounding natural.'
+    },
+    {
+      filed: 'Which aspects of clinical competence do you believe require further development through direct patient interaction, beyond what was offered by the virtual simulations?' as keyof SurveyResponse,
+      text: '26. Which aspects of clinical competence do you believe require further development through direct patient interaction, beyond what was offered by the virtual simulations?'
     }
   ];
 
