@@ -7,6 +7,7 @@ import {
   Button,
   Paper,
   Center,
+  Container,
 } from "@mantine/core";
 import SurveyContent from "./SurveyContent";
 
@@ -109,6 +110,7 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
     "10. If you could redo one moment in the simulation, what would you change?",
     "11. How will you apply what you learned in a real clinical setting?",
     "12. What was the most helpful part of this session?",
+    "13. If you have increased confidence in interviewing clients with expressive aphasia through this session, what made that happen? Which of the following helped increase your confidence? (Select all that apply)",
   ];
 
   // Mid-Simulation Survey responses
@@ -130,7 +132,34 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
     return initial;
   });
 
+  // State for question 13 checkboxes
+  const [question13Checkboxes, setQuestion13Checkboxes] = useState<{
+    [key: string]: boolean;
+  }>({
+    "Realistic avatar expressions": false,
+    "Practice opportunity": false,
+    "Feedback from system/facilitator": false,
+    "Realism of scenario": false,
+    Other: false,
+  });
+
+  // State for question 13 "Other" text
+  const [question13OtherText, setQuestion13OtherText] = useState<string>("");
+
+  // State for question 13 explanation
+  const [question13Explanation, setQuestion13Explanation] =
+    useState<string>("");
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Helper function to count words
+  const countWords = (text: string): number => {
+    if (!text || typeof text !== "string") return 0;
+    return text
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0).length;
+  };
 
   // Update checklist items when initialData changes
   React.useEffect(() => {
@@ -165,6 +194,23 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
         // Update mid-survey responses if available
         if (initialData.midSurveyResponses) {
           setMidSurveyResponses(initialData.midSurveyResponses);
+
+          // Handle question 13 data if available
+          const question13Data =
+            initialData.midSurveyResponses[
+              "13. If you have increased confidence in interviewing clients with expressive aphasia through this session, what made that happen? Which of the following helped increase your confidence? (Select all that apply)"
+            ];
+          if (question13Data && typeof question13Data === "object") {
+            if (question13Data.selectedOptions) {
+              setQuestion13Checkboxes(question13Data.selectedOptions);
+            }
+            if (question13Data.otherText) {
+              setQuestion13OtherText(question13Data.otherText);
+            }
+            if (question13Data.explanation) {
+              setQuestion13Explanation(question13Data.explanation);
+            }
+          }
         }
       }
     } else {
@@ -206,6 +252,13 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
     }));
   };
 
+  const handleQuestion13CheckboxChange = (option: string, checked: boolean) => {
+    setQuestion13Checkboxes((prev) => ({
+      ...prev,
+      [option]: checked,
+    }));
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
@@ -218,7 +271,15 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
             notes,
           })
         ),
-        midSurveyResponses: midSurveyResponses,
+        midSurveyResponses: {
+          ...midSurveyResponses,
+          "13. If you have increased confidence in interviewing clients with expressive aphasia through this session, what made that happen? Which of the following helped increase your confidence? (Select all that apply)":
+            {
+              selectedOptions: question13Checkboxes,
+              otherText: question13OtherText,
+              explanation: question13Explanation,
+            },
+        },
       };
       onSubmit(submitData);
     } finally {
@@ -233,20 +294,18 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
       (question) => midSurveyResponses[question] !== null
     );
 
-    // Check if all open-ended questions have at least 15 words
-    const countWords = (text: string): number => {
-      if (!text || typeof text !== "string") return 0;
-      return text
-        .trim()
-        .split(/\s+/)
-        .filter((word) => word.length > 0).length;
-    };
-
-    const allOpenEndedValid = openEndedQuestions.every(
+    // Check if all open-ended questions have at least 15 words (excluding question 13)
+    const regularOpenEndedQuestions = openEndedQuestions.slice(0, -1); // Exclude question 13
+    const allOpenEndedValid = regularOpenEndedQuestions.every(
       (question) => countWords(String(midSurveyResponses[question] || "")) >= 15
     );
 
-    return allRatingQuestionsAnswered && allOpenEndedValid;
+    // Check if question 13 has at least one option selected and explanation provided
+    const question13Valid =
+      Object.values(question13Checkboxes).some((value) => value) &&
+      countWords(question13Explanation) >= 15;
+
+    return allRatingQuestionsAnswered && allOpenEndedValid && question13Valid;
   };
 
   const formValid = isFormValid();
@@ -492,7 +551,7 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
                 field: q as keyof typeof midSurveyResponses,
                 text: q,
               }))}
-              openEndedQuestions={openEndedQuestions.map((q) => ({
+              openEndedQuestions={openEndedQuestions.slice(0, -1).map((q) => ({
                 field: q as keyof typeof midSurveyResponses,
                 text: q,
               }))}
@@ -511,6 +570,178 @@ export const SelfReflection: React.FC<SelfReflectionProps> = ({
             />
           </Box>
         </Box>
+
+        {/* Custom Question 13 Section */}
+        <div
+          style={{
+            minHeight: "100%",
+            background: "white",
+            padding: "0 20px 40px 20px",
+            marginTop: "-100px",
+            boxSizing: "border-box" as const,
+            position: "relative",
+            height: "auto",
+            display: "flex",
+            flexDirection: "column" as const,
+            overflow: "visible",
+          }}
+        >
+          <Container
+            size="md"
+            style={{
+              position: "relative",
+              width: "100%",
+              maxWidth: "800px",
+              margin: "0 auto",
+            }}
+          >
+            <Text
+              fw={600}
+              mb="md"
+              c="#111"
+              style={{
+                fontSize: "18px",
+                textAlign: "left",
+              }}
+            >
+              13. If you have increased confidence in interviewing clients with
+              expressive aphasia through this session, what made that happen?
+              Which of the following helped increase your confidence? (Select
+              all that apply)*
+            </Text>
+
+            {/* Checkbox options */}
+            <Box style={{ marginBottom: "20px" }}>
+              {Object.keys(question13Checkboxes).map((option) => (
+                <Box key={option} style={{ marginBottom: "12px" }}>
+                  <Checkbox
+                    checked={question13Checkboxes[option]}
+                    onChange={(event) =>
+                      handleQuestion13CheckboxChange(
+                        option,
+                        event.currentTarget.checked
+                      )
+                    }
+                    disabled={isCompleted}
+                    label={option}
+                    size="md"
+                    color="green"
+                    styles={{
+                      input: {
+                        cursor: isCompleted ? "default" : "pointer",
+                        opacity: isCompleted ? 0.6 : 1,
+                      },
+                      label: {
+                        fontSize: "16px",
+                        color: isCompleted ? "#9ca3af" : "#111",
+                        cursor: isCompleted ? "default" : "pointer",
+                      },
+                    }}
+                  />
+                  {option === "Other" && question13Checkboxes["Other"] && (
+                    <Box style={{ marginLeft: "30px", marginTop: "8px" }}>
+                      <Textarea
+                        placeholder={isCompleted ? "" : "Please specify..."}
+                        value={question13OtherText}
+                        onChange={
+                          isCompleted
+                            ? undefined
+                            : (event) =>
+                                setQuestion13OtherText(
+                                  event.currentTarget.value
+                                )
+                        }
+                        minRows={2}
+                        maxRows={4}
+                        size="sm"
+                        disabled={isCompleted}
+                        styles={{
+                          input: {
+                            fontSize: "14px",
+                            border: "1px solid #ddd",
+                            borderRadius: "6px",
+                            backgroundColor: isCompleted
+                              ? "#f8f9fa"
+                              : "#f3f4f6",
+                            color: isCompleted ? "#9ca3af" : "#111",
+                            cursor: isCompleted ? "default" : "text",
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              ))}
+            </Box>
+
+            {/* Explanation text area */}
+            <Box>
+              <Text
+                fw={600}
+                mb="md"
+                c="#111"
+                style={{
+                  fontSize: "16px",
+                  textAlign: "left",
+                }}
+              >
+                Please explain your choices:*
+              </Text>
+              <Textarea
+                placeholder={
+                  isCompleted ? "" : "Type here... (at least 15 words)"
+                }
+                value={question13Explanation}
+                onChange={
+                  isCompleted
+                    ? undefined
+                    : (event) =>
+                        setQuestion13Explanation(event.currentTarget.value)
+                }
+                autosize
+                minRows={5}
+                maxRows={10}
+                size="lg"
+                disabled={isCompleted}
+                style={{
+                  backgroundColor: isCompleted ? "#f8f9fa" : "#f3f4f6",
+                  border: "none",
+                  width: "100%",
+                }}
+                styles={{
+                  input: {
+                    backgroundColor: isCompleted ? "#f8f9fa" : "#f3f4f6",
+                    border: isCompleted
+                      ? "none"
+                      : question13Explanation &&
+                        countWords(question13Explanation) < 15
+                      ? "2px solid #e53e3e"
+                      : "none",
+                    borderRadius: "10px",
+                    fontSize: "16px",
+                    color: isCompleted ? "#9ca3af" : "#111",
+                    padding: "14px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    cursor: isCompleted ? "default" : "text",
+                  },
+                }}
+              />
+              {question13Explanation &&
+                countWords(question13Explanation) < 15 && (
+                  <Text
+                    c="#e53e3e"
+                    size="sm"
+                    mt="xs"
+                    style={{ fontStyle: "italic" }}
+                  >
+                    Please provide at least 15 words. Current word count:{" "}
+                    {countWords(question13Explanation)}
+                  </Text>
+                )}
+            </Box>
+          </Container>
+        </div>
 
         {/* Submit Button */}
         <Center>
